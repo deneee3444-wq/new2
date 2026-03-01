@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request, send_from_directory
 import json, os
 
-app = Flask(__name__, static_folder='.')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DATA_FILE = 'data.json'
+app = Flask(__name__, static_folder=BASE_DIR)
+
+DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 
 def load_data():
     if not os.path.exists(DATA_FILE):
@@ -18,7 +20,7 @@ def save_data(data):
 # ── Serve HTML ──
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
 # ── Accounts ──
 @app.route('/api/accounts', methods=['GET'])
