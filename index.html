@@ -547,6 +547,148 @@
     50% { opacity: 0.4; transform: scale(0.8); }
   }
 
+  .btn-fav {
+    background: transparent;
+    border: 1px solid var(--border2) !important;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .btn-fav:hover { border-color: #ff6b9d !important; color: #ff6b9d; }
+  .btn-fav.active { background: rgba(255,107,157,0.12); border-color: rgba(255,107,157,0.5) !important; color: #ff6b9d; }
+
+  .btn-copy-prompt {
+    padding: 4px 7px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-copy-prompt:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* LOGIN OVERLAY */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: rgba(12,13,16,0.97);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-overlay.hidden { display: none; }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 36px 32px;
+    width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; gap: 20px;
+    position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  .login-logo {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .login-title {
+    font-size: 20px; font-weight: 800; text-align: center; letter-spacing: -0.5px;
+  }
+  .login-sub {
+    font-size: 12px; color: var(--text-muted); text-align: center; margin-top: -12px;
+  }
+
+  .login-field { display: flex; flex-direction: column; gap: 7px; }
+  .login-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
+
+  .login-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 2px;
+  }
+  .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .login-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--error);
+    text-align: center; min-height: 16px;
+  }
+
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm);
+    color: #0a0c10; font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+
+  .pg-btn {
+    padding: 5px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .pg-info {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+    padding: 0 6px; min-width: 80px; text-align: center;
+  }
+
+  .pg-num {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pg-num:hover { border-color: var(--accent); color: var(--accent); }
+  .pg-num.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+  /* TOPBAR logout btn */
+  .logout-btn {
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
   input[type=file] { display: none; }
 
   /* MOBILE */
@@ -562,14 +704,35 @@
 </head>
 <body>
 
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon">🎬</div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px">Clip<span style="color:var(--accent)">Fly</span> <span style="color:var(--text-muted);font-weight:400;font-size:13px">Auto</span></div>
+    </div>
+    <div class="login-title">Giriş Yap</div>
+    <div class="login-sub">Devam etmek için şifrenizi girin</div>
+    <div class="login-field">
+      <div class="login-label">Şifre</div>
+      <input class="login-input" type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="logo">
     <div class="logo-icon">🎬</div>
     <div class="logo-text">Clip<span>Fly</span> <em>Auto</em></div>
   </div>
-  <div class="badge">
-    <div class="badge-dot gray" id="badgeDot"></div>
-    <span id="badgeText">hesap yüklenmedi</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="badge">
+      <div class="badge-dot gray" id="badgeDot"></div>
+      <span id="badgeText">hesap yüklenmedi</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">⏻ Çıkış</button>
   </div>
 </div>
 
@@ -640,6 +803,9 @@
         <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">
           🕓 Geçmiş <span class="tab-count" id="historyCount">0</span>
         </button>
+        <button class="tab-btn" id="tabBtnFavorites" onclick="switchTab('favorites')">
+          ♥ Favoriler <span class="tab-count" id="favCount">0</span>
+        </button>
       </div>
       <button class="tab-clear-btn" id="clearBtn" onclick="clearActive()">🗑 Temizle</button>
     </div>
@@ -653,6 +819,11 @@
           <p>Sol panelden hesap, görsel ve prompt ekle, ardından başlat.</p>
         </div>
       </div>
+      <div class="pagination" id="pgOutput" style="display:none">
+        <button class="pg-btn" id="pgOutPrev" onclick="changeOutputPage(-1)">‹ Önceki</button>
+        <div class="pg-info" id="pgOutInfo">1 / 1</div>
+        <button class="pg-btn" id="pgOutNext" onclick="changeOutputPage(1)">Sonraki ›</button>
+      </div>
     </div>
 
     <!-- HISTORY TAB -->
@@ -665,6 +836,28 @@
         </div>
         <div class="history-list" id="historyList"></div>
       </div>
+      <div class="pagination" id="pgHistory" style="display:none">
+        <button class="pg-btn" id="pgHistPrev" onclick="changeHistoryPage(-1)">‹ Önceki</button>
+        <div class="pg-info" id="pgHistInfo">1 / 1</div>
+        <button class="pg-btn" id="pgHistNext" onclick="changeHistoryPage(1)">Sonraki ›</button>
+      </div>
+    </div>
+
+    <!-- FAVORITES TAB -->
+    <div class="tab-pane" id="paneFavorites">
+      <div class="right-scroll" id="favArea">
+        <div class="empty-state" id="emptyFavorites">
+          <div class="empty-icon">♥</div>
+          <h3>Henüz favori yok</h3>
+          <p>Geçmişten veya çıktılardan ♥ ile favorilere ekle.</p>
+        </div>
+        <div class="history-list" id="favoritesList"></div>
+      </div>
+      <div class="pagination" id="pgFavorites" style="display:none">
+        <button class="pg-btn" id="pgFavPrev" onclick="changeFavPage(-1)">‹ Önceki</button>
+        <div class="pg-info" id="pgFavInfo">1 / 1</div>
+        <button class="pg-btn" id="pgFavNext" onclick="changeFavPage(1)">Sonraki ›</button>
+      </div>
     </div>
 
   </div>
@@ -674,13 +867,21 @@
 <input type="file" id="imgFile" accept="image/*" onchange="loadImage(event)">
 
 <script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ClipFly Auto — Backend-aware frontend
+   Tüm API çağrıları Flask backend üzerinden gider.
+   State (hesaplar, job'lar, geçmiş) RAM + data.json'da yaşar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 let tokens = [];
 let totalLoaded = 0;
 let imageFile = null;
 let imageBase64 = null;
-let historyData = JSON.parse(localStorage.getItem('cf_history') || '[]');
-let activeJobCount = 0;
+let historyData = [];
 let outputCardCount = 0;
+
+// Bilinen job state'leri — sadece UI update kontrolü için
+const knownJobStates = {};
 
 const STEPS = [
   'Signed URL alınıyor...',
@@ -691,27 +892,17 @@ const STEPS = [
   'Video bekleniyor...'
 ];
 
-const BASE = 'https://www.clipfly.ai';
+const PAGE_SIZE = 5;
 
-const HEADERS = (token, extra = {}) => ({
-  'accept': 'application/json',
-  'accept-language': 'en-US,en;q=0.8',
-  'authorization': token,
-  'content-type': 'application/json',
-  'origin': BASE,
-  'platform': 'web',
-  'priority': 'u=1, i',
-  'referer': BASE + '/aitools/ai-video-generator-v2',
-  'sec-ch-ua': '"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"',
-  'sec-ch-ua-mobile': '?0',
-  'sec-ch-ua-platform': '"Windows"',
-  'sec-fetch-dest': 'empty',
-  'sec-fetch-mode': 'cors',
-  'sec-fetch-site': 'same-origin',
-  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
-  'zone': '180',
-  ...extra
-});
+// Output pagination
+let outputJobOrder  = [];   // jobId'leri ekleniş sırasıyla (en yeni başta)
+let outputPage      = 1;
+
+// History pagination
+let historyPage     = 1;
+
+// Favorites pagination
+let favPage         = 1;
 
 /* ── TABS ── */
 let currentTab = 'output';
@@ -720,50 +911,128 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('paneOutput').classList.toggle('active', tab === 'output');
   document.getElementById('paneHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('paneFavorites').classList.toggle('active', tab === 'favorites');
   document.getElementById('tabBtnOutput').classList.toggle('active', tab === 'output');
   document.getElementById('tabBtnHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('tabBtnFavorites').classList.toggle('active', tab === 'favorites');
 }
 
 function clearActive() {
   if (currentTab === 'output') clearOutputs();
-  else clearHistory();
+  else if (currentTab === 'history') clearHistory();
+  else clearFavorites();
 }
 
 function clearOutputs() {
   if (!outputCardCount) return;
   if (!confirm('Tüm çıktı kartları silinsin mi?')) return;
   const area = document.getElementById('statusArea');
-  // Remove all job cards
   area.querySelectorAll('[data-job]').forEach(el => el.remove());
   outputCardCount = 0;
+  outputJobOrder  = [];
+  outputPage      = 1;
   document.getElementById('outputCount').textContent = '0';
   document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('pgOutput').style.display = 'none';
+  fetch('/api/jobs', { method: 'DELETE' });
 }
 
-async function clearHistory() {
+function clearHistory() {
   if (!historyData.length) return;
   if (!confirm('Tüm geçmiş silinsin mi?')) return;
-  await fetch('/api/history', { method: 'DELETE' });
+  fetch('/api/history', { method: 'DELETE' });
   historyData = [];
   renderHistory();
 }
 
-/* ── ACCOUNTS ── */
-async function loadAccounts(e) {
+/* ── LOGIN ── */
+async function doLogin() {
+  const pwd = document.getElementById('loginPwd').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  if (!pwd) { err.textContent = 'Şifre boş olamaz'; return; }
+  btn.disabled = true;
+  err.textContent = '';
+  try {
+    const res  = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      initState();
+    } else {
+      err.textContent = data.error || 'Hatalı şifre';
+      document.getElementById('loginPwd').value = '';
+    }
+  } catch (e) {
+    err.textContent = 'Sunucuya bağlanılamadı';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' });
+  location.reload();
+}
+
+/* ── OUTPUT PAGINATION ── */
+function applyOutputPagination() {
+  const total = outputJobOrder.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (outputPage > pages) outputPage = pages;
+
+  const start = (outputPage - 1) * PAGE_SIZE;
+  const end   = start + PAGE_SIZE;
+
+  // Tüm job kartlarını gizle/göster
+  document.querySelectorAll('#statusArea [data-job]').forEach((el, i) => {
+    // outputJobOrder'daki index (en yeni = 0)
+    const jobId = el.getAttribute('data-job');
+    const idx   = outputJobOrder.indexOf(jobId);
+    el.style.display = (idx >= start && idx < end) ? '' : 'none';
+  });
+
+  // emptyState
+  const hasVisible = total > 0;
+  document.getElementById('emptyState').style.display = hasVisible ? 'none' : 'flex';
+
+  // Pagination bar
+  const pg = document.getElementById('pgOutput');
+  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
+  document.getElementById('pgOutInfo').textContent = `${outputPage} / ${pages}`;
+  document.getElementById('pgOutPrev').disabled = outputPage <= 1;
+  document.getElementById('pgOutNext').disabled = outputPage >= pages;
+}
+
+function changeOutputPage(dir) {
+  outputPage += dir;
+  applyOutputPagination();
+  document.getElementById('statusArea').scrollTop = 0;
+}
+function loadAccounts(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = async ev => {
-    const res = await fetch('/api/accounts/load', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: ev.target.result })
-    });
-    const json = await res.json();
-    tokens = json.accounts;
-    totalLoaded = json.total_loaded;
+    const newTokens = ev.target.result.split('\n').filter(l => l.trim());
+    // Mevcut listeye ekle (duplicate olmayanları)
+    const existing = new Set(tokens);
+    for (const t of newTokens) {
+      if (!existing.has(t)) { tokens.push(t); existing.add(t); }
+    }
+    totalLoaded = tokens.length;
     updateAccountUI();
     checkReady();
+    // Backend'e kaydet (append=true)
+    await fetch('/api/accounts', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tokens: newTokens, append: true })
+    });
   };
   reader.readAsText(file);
 }
@@ -777,8 +1046,7 @@ function updateAccountUI() {
   document.getElementById('badgeText').textContent = n > 0 ? `${n} hesap` : 'hesap bitti';
 }
 
-async function removeFirstToken() {
-  await fetch('/api/accounts/first', { method: 'DELETE' });
+function removeFirstToken() {
   tokens.shift();
   updateAccountUI();
   // NO auto-download — sadece bellekten düşülür
@@ -914,16 +1182,26 @@ function updateChar() {
 
 /* ── JOB CARDS ── */
 function createJobCard(jobId, prompt) {
-  document.getElementById('emptyState').style.display = 'none';
+  if (document.getElementById('job-' + jobId)) return; // zaten var
+
   outputCardCount++;
   document.getElementById('outputCount').textContent = outputCardCount;
 
   const div = document.createElement('div');
   div.setAttribute('data-job', jobId);
   div.id = 'job-' + jobId;
-  document.getElementById('statusArea').appendChild(div);
-  // Switch to output tab so user sees the new job
+
+  // En başa ekle (en yeni üstte)
+  const area = document.getElementById('statusArea');
+  const firstCard = area.querySelector('[data-job]');
+  if (firstCard) area.insertBefore(div, firstCard);
+  else area.appendChild(div);
+
+  // outputJobOrder'a ekle (en yeni = index 0)
+  if (!outputJobOrder.includes(jobId)) outputJobOrder.unshift(jobId);
+
   switchTab('output');
+  applyOutputPagination();
   return div;
 }
 
@@ -951,21 +1229,27 @@ function renderSteps(jobId, activeStep) {
 function renderSuccess(jobId, videoUrl, prompt) {
   const el = document.getElementById('job-' + jobId);
   if (!el) return;
+  const isFav = favoritesData.some(f => f.videoUrl === videoUrl);
+  const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   el.innerHTML = `
     <div class="success-card">
       <div class="success-header">
         <div class="success-icon">✓</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="success-title">Video hazır! <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span></div>
-          <div class="success-sub">1 hesap kullanıldı</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+            <div class="success-sub" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapedPrompt}">${prompt}</div>
+            <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${escapedPrompt}')">📋</button>
+          </div>
         </div>
       </div>
-      <video class="video-player" controls autoplay loop>
+      <video class="video-player" controls autoplay loop muted>
         <source src="${videoUrl}" type="video/mp4">
       </video>
       <div class="video-actions">
         <a class="btn-sm btn-green" href="${videoUrl}" download>⬇ İndir</a>
         <button class="btn-sm btn-outline" onclick="copyUrl('${videoUrl}')">🔗 URL Kopyala</button>
+        <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" id="fav-out-${jobId}" onclick="toggleFavFromOutput('${videoUrl}','${escapedPrompt}','fav-out-${jobId}')">♥ ${isFav ? 'Favoride' : 'Favori'}</button>
         <button class="btn-sm btn-danger" onclick="removeCard('job-${jobId}')">🗑 Kaldır</button>
       </div>
     </div>`;
@@ -989,13 +1273,13 @@ function renderError(jobId, msg) {
 function removeCard(cardId) {
   const el = document.getElementById(cardId);
   if (el) {
+    const jobId = cardId.replace('job-', '');
+    fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
     el.remove();
     outputCardCount = Math.max(0, outputCardCount - 1);
     document.getElementById('outputCount').textContent = outputCardCount;
-    const area = document.getElementById('statusArea');
-    if (!area.querySelector('[data-job]')) {
-      document.getElementById('emptyState').style.display = 'flex';
-    }
+    outputJobOrder = outputJobOrder.filter(id => id !== jobId);
+    applyOutputPagination();
   }
 }
 
@@ -1004,102 +1288,107 @@ async function generate() {
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt || !imageFile || tokens.length === 0) return;
 
-  // Snapshot what we need right now (multi-process safe)
-  const token = tokens[0].split(':')[2].trim();
-  const jobId = Date.now();
-  const capturedImageFile = imageFile;
-  const capturedImageBase64 = imageBase64;
-
-  // Immediately consume the token so parallel jobs don't share it
-  removeFirstToken();
-  checkReady();
-
-  createJobCard(jobId, prompt);
-
-  const fileName = capturedImageFile.name + '.' + capturedImageFile.name.split('.').pop();
-  const fileExt = capturedImageFile.name.split('.').pop();
+  document.getElementById('submitBtn').disabled = true;
 
   try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        imageBase64: imageBase64,
+        imageName:   imageFile.name,
+        prompt:      prompt
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || 'Sunucu hatası');
+      return;
+    }
+
+    const { jobId } = await res.json();
+
+    // Backend token tüketti, frontend'deki listeyi de senkronize et
+    removeFirstToken();
+    checkReady();
+
+    // Kart oluştur (polling halledecek adım güncellemelerini)
+    createJobCard(jobId, prompt);
     renderSteps(jobId, STEPS[0]);
-    const signRes = await fetch(`${BASE}/api/v1/common/upload/signed-url?filename=${encodeURIComponent(fileName)}`, {
-      method: 'GET', headers: HEADERS(token)
-    });
-    const signJson = await signRes.json();
-    if (signJson.code && signJson.code !== 200) throw new Error(`Token geçersiz veya süresi dolmuş (${signJson.message}). Lütfen accounts.txt dosyasını yeniden yükleyin.`);
-    const signing = signJson.data;
-    if (typeof signing !== "string" || !signing.includes(".com")) throw new Error("Signed URL alınamadı: " + JSON.stringify(signing));
-
-    renderSteps(jobId, STEPS[1]);
-    const b64Res = await fetch(`${BASE}/api/v1/common/upload/base64`, {
-      method: 'POST', headers: HEADERS(token),
-      body: JSON.stringify({ content: capturedImageBase64, file_type: 'image', is_original_name: 0, name: capturedImageFile.name, prefix_path: '/uploads' })
-    });
-    const sourcePath = (await b64Res.json()).data.url;
-
-    renderSteps(jobId, STEPS[2]);
-    const fileBuffer = await capturedImageFile.arrayBuffer();
-    await fetch(`${BASE}${signing.split('.com')[1]}`, {
-      method: 'PUT',
-      headers: { 'content-type': `image/${fileExt}`, 'origin': BASE, 'referer': BASE + '/aitools/ai-video-generator-v2', 'user-agent': 'Mozilla/5.0', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-origin' },
-      body: fileBuffer
-    });
-
-    renderSteps(jobId, STEPS[3]);
-    const matRes = await fetch(`${BASE}/api/v1/user/materials/create`, {
-      method: 'POST', headers: HEADERS(token, { 'x-country': 'TR' }),
-      body: JSON.stringify({
-        is_ai: -1, name: capturedImageFile.name, type: 'image', attrs: {},
-        urls: {
-          thumb: sourcePath.replace('https://video-clipfly-west2.s3.us-west-2.amazonaws.com', ''),
-          url: signing.split('?')[0].split('.com')[1]
-        }
-      })
-    });
-    const materialId = (await matRes.json()).data.id;
-
-    renderSteps(jobId, STEPS[4]);
-    const sourceImage = signing.split('?')[0].split('.com')[1];
-    const taskRes = await fetch(`${BASE}/api/v1/user/ai-task-queues`, {
-      method: 'POST', headers: HEADERS(token),
-      body: JSON.stringify({
-        type: 17,
-        attrs: [{
-          enhance: true, prompt, camera_control: 'auto', from: 'image', imageFrom: 'cloud',
-          img_style_id: '111', is_scale: 0, materialId: String(materialId),
-          negative_prompt: '', voice: true, model_id: '26', biz_type: 17,
-          duration: '5', audio_type: 1, camerafixed: false,
-          source_image: sourceImage, urls: { url: sourceImage }
-        }]
-      })
-    });
-
-    if (!taskRes.ok) {
-      throw new Error('Görev oluşturulamadı: ' + JSON.stringify(await taskRes.json()));
-    }
-
-    renderSteps(jobId, STEPS[5]);
-    const pollUrl = `${BASE}/api/v1/user/ai-tasks/video-generate-list?page=1&page_size=10&paranoid=1&task_type=7&version=1.0&clear=true`;
-
-    let videoUrl = null;
-    for (let i = 0; i < 300; i++) {
-      await sleep(2000);
-      const pollData = await (await fetch(pollUrl, { method: 'GET', headers: HEADERS(token) })).json();
-      try {
-        const url = pollData.data[0].tasks[0].after_material.urls.url;
-        if (url) { videoUrl = BASE + url; break; }
-      } catch {}
-    }
-
-    if (videoUrl) {
-      renderSuccess(jobId, videoUrl, prompt);
-    } else {
-      throw new Error('Video URL alınamadı — zaman aşımı (5 dk)');
-    }
+    switchTab('output');
 
   } catch (err) {
-    renderError(jobId, err.message || String(err));
+    alert('İstek hatası: ' + err.message);
+  } finally {
+    checkReady();
   }
 }
+
+/* ── JOB POLLING (2sn'de bir backend'den state al) ── */
+async function pollJobs() {
+  try {
+    const res  = await fetch('/api/jobs');
+    if (res.status === 401) {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      return;
+    }
+    const jobs = await res.json();
+
+    for (const [jobId, job] of Object.entries(jobs)) {
+      const existing = document.getElementById('job-' + jobId);
+
+      // Sayfa refresh'te yeni gelen job'lar için kart oluştur
+      if (!existing) {
+        createJobCard(jobId, job.prompt);
+        // Eğer çalışıyorsa adım göster; bitmiş/hatalıysa doğrudan final render
+      }
+
+      const prev = knownJobStates[jobId];
+
+      if (job.status === 'running') {
+        // Her poll'da adımı güncelle
+        renderSteps(jobId, job.step);
+      } else if (job.status === 'success' && prev !== 'success') {
+        renderSuccess(jobId, job.videoUrl, job.prompt);
+      } else if (job.status === 'error' && prev !== 'error') {
+        renderError(jobId, job.error);
+      }
+
+      knownJobStates[jobId] = job.status;
+    }
+
+    // Geçmişi de senkronize et
+    const histRes  = await fetch('/api/history');
+    const histJson = await histRes.json();
+    if (JSON.stringify(histJson) !== JSON.stringify(historyData)) {
+      historyData = histJson;
+      renderHistory();
+    }
+
+    // Favorileri senkronize et
+    const favRes  = await fetch('/api/favorites');
+    const favJson = await favRes.json();
+    if (JSON.stringify(favJson) !== JSON.stringify(favoritesData)) {
+      favoritesData = favJson;
+      renderFavorites();
+      renderHistory(); // kalp ikonlarını güncelle
+    }
+
+    // Hesap sayısını backend ile senkronize et
+    const stRes  = await fetch('/api/state');
+    const st     = await stRes.json();
+    if (st.tokens.length !== tokens.length) {
+      tokens       = st.tokens;
+      totalLoaded  = st.total_loaded;
+      updateAccountUI();
+      checkReady();
+    }
+
+  } catch (_) { /* ağ hatası — sessizce geç */ }
+}
+
+setInterval(pollJobs, 2000);
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -1112,35 +1401,46 @@ function copyUrl(url) {
 }
 
 /* ── HISTORY ── */
-async function addHistory(videoUrl, prompt) {
-  await fetch('/api/history', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ videoUrl, prompt, time: new Date().toLocaleString('tr-TR') })
-  });
-  await loadHistory();
-}
-
-async function loadHistory() {
-  const res = await fetch('/api/history');
-  const json = await res.json();
-  historyData = json.history;
+function addHistory(videoUrl, prompt) {
+  // Artık server-side otomatik yapılıyor. Bu fonksiyon geriye dönük uyumluluk için korunur.
+  const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR') };
+  historyData.unshift(item);
+  if (historyData.length > 50) historyData = historyData.slice(0, 50);
   renderHistory();
 }
 
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  const empty = document.getElementById('emptyHistory');
-  document.getElementById('historyCount').textContent = historyData.length;
+function deleteHistoryItem(idx) {
+  fetch(`/api/history/${idx}`, { method: 'DELETE' });
+  historyData.splice(idx, 1);
+  renderHistory();
+}
 
-  if (!historyData.length) {
+/* ── FAVORITES ── */
+let favoritesData = [];
+
+function renderFavorites() {
+  const list  = document.getElementById('favoritesList');
+  const empty = document.getElementById('emptyFavorites');
+  const total = favoritesData.length;
+  document.getElementById('favCount').textContent = total;
+
+  if (!total) {
     empty.style.display = 'flex';
     list.innerHTML = '';
+    document.getElementById('pgFavorites').style.display = 'none';
     return;
   }
 
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (favPage > pages) favPage = pages;
+  const start = (favPage - 1) * PAGE_SIZE;
+  const pageItems = favoritesData.slice(start, start + PAGE_SIZE);
+
   empty.style.display = 'none';
-  list.innerHTML = historyData.map((item, idx) => `
+  list.innerHTML = pageItems.map((item, relIdx) => {
+    const idx = start + relIdx;
+    const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
     <div class="history-card">
       <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
         <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
@@ -1148,33 +1448,223 @@ function renderHistory() {
         </video>
       </div>
       <div class="history-card-info">
-        <div class="history-card-prompt" title="${item.prompt}">${item.prompt}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="history-card-prompt" style="flex:1" title="${esc}">${item.prompt || ''}</div>
+          <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${esc}')">📋</button>
+        </div>
         <div class="history-card-time">${item.time}</div>
         <div class="history-card-actions">
           <a class="btn-sm btn-green" href="${item.videoUrl}" download style="font-size:11px;padding:5px 10px">⬇ İndir</a>
           <button class="btn-sm btn-outline" onclick="copyUrl('${item.videoUrl}')" style="font-size:11px;padding:5px 10px">🔗 URL</button>
+          <button class="btn-sm btn-fav active" style="font-size:11px;padding:5px 10px" onclick="removeFavoriteByIdx(${idx})">♥ Çıkar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Pagination bar
+  const pg = document.getElementById('pgFavorites');
+  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
+  document.getElementById('pgFavInfo').textContent = `${favPage} / ${pages}`;
+  document.getElementById('pgFavPrev').disabled = favPage <= 1;
+  document.getElementById('pgFavNext').disabled = favPage >= pages;
+}
+
+function changeFavPage(dir) {
+  favPage += dir;
+  renderFavorites();
+  document.getElementById('favArea').scrollTop = 0;
+}
+
+function toggleFavFromHistory(histIdx, btnId) {
+  const item = historyData[histIdx];
+  if (!item) return;
+  const favIdx = favoritesData.findIndex(f => f.videoUrl === item.videoUrl);
+  if (favIdx >= 0) {
+    removeFavoriteByIdx(favIdx);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.remove('active');
+  } else {
+    addFavorite(item);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
+  }
+}
+
+function toggleFavFromOutput(videoUrl, prompt, btnId) {
+  const favIdx = favoritesData.findIndex(f => f.videoUrl === videoUrl);
+  const btn = document.getElementById(btnId);
+  if (favIdx >= 0) {
+    removeFavoriteByIdx(favIdx);
+    if (btn) { btn.classList.remove('active'); btn.textContent = '♥ Favori'; }
+  } else {
+    const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR') };
+    addFavorite(item);
+    if (btn) { btn.classList.add('active'); btn.textContent = '♥ Favoride'; }
+  }
+}
+
+function addFavorite(item) {
+  if (favoritesData.some(f => f.videoUrl === item.videoUrl)) return;
+  favoritesData.unshift(item);
+  fetch('/api/favorites', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(item)
+  });
+  renderFavorites();
+}
+
+function removeFavoriteByIdx(idx) {
+  fetch(`/api/favorites/${idx}`, { method: 'DELETE' });
+  favoritesData.splice(idx, 1);
+  renderFavorites();
+  renderHistory();
+}
+
+function clearFavorites() {
+  if (!favoritesData.length) return;
+  if (!confirm('Tüm favoriler silinsin mi?')) return;
+  fetch('/api/favorites', { method: 'DELETE' });
+  favoritesData = [];
+  favPage = 1;
+  renderFavorites();
+  renderHistory();
+}
+
+function copyPrompt(btn, prompt) {
+  const decoded = prompt.replace(/&quot;/g, '"');
+  navigator.clipboard.writeText(decoded);
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  btn.style.color = 'var(--accent)';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+}
+
+function renderHistory() {
+  const list  = document.getElementById('historyList');
+  const empty = document.getElementById('emptyHistory');
+  const total = historyData.length;
+  document.getElementById('historyCount').textContent = total;
+
+  if (!total) {
+    empty.style.display = 'flex';
+    list.innerHTML = '';
+    document.getElementById('pgHistory').style.display = 'none';
+    return;
+  }
+
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (historyPage > pages) historyPage = pages;
+  const start = (historyPage - 1) * PAGE_SIZE;
+  const pageItems = historyData.slice(start, start + PAGE_SIZE);
+
+  empty.style.display = 'none';
+  list.innerHTML = pageItems.map((item, relIdx) => {
+    const idx = start + relIdx;
+    const isFav = favoritesData.some(f => f.videoUrl === item.videoUrl);
+    const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+    <div class="history-card">
+      <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
+        <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
+          <source src="${item.videoUrl}" type="video/mp4">
+        </video>
+      </div>
+      <div class="history-card-info">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="history-card-prompt" style="flex:1" title="${esc}">${item.prompt || ''}</div>
+          <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${esc}')">📋</button>
+        </div>
+        <div class="history-card-time">${item.time}</div>
+        <div class="history-card-actions">
+          <a class="btn-sm btn-green" href="${item.videoUrl}" download style="font-size:11px;padding:5px 10px">⬇ İndir</a>
+          <button class="btn-sm btn-outline" onclick="copyUrl('${item.videoUrl}')" style="font-size:11px;padding:5px 10px">🔗 URL</button>
+          <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" style="font-size:11px;padding:5px 10px" id="fav-h-${idx}" onclick="toggleFavFromHistory(${idx},'fav-h-${idx}')">♥</button>
           <button class="btn-sm btn-danger" onclick="deleteHistoryItem(${idx})" style="font-size:11px;padding:5px 10px">🗑</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // Pagination bar
+  const pg = document.getElementById('pgHistory');
+  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
+  document.getElementById('pgHistInfo').textContent = `${historyPage} / ${pages}`;
+  document.getElementById('pgHistPrev').disabled = historyPage <= 1;
+  document.getElementById('pgHistNext').disabled = historyPage >= pages;
 }
 
-async function deleteHistoryItem(idx) {
-  await fetch('/api/history/' + idx, { method: 'DELETE' });
-  await loadHistory();
+function changeHistoryPage(dir) {
+  historyPage += dir;
+  renderHistory();
+  document.getElementById('historyArea').scrollTop = 0;
 }
 
-/* ── INIT ── */
+/* ── INIT: Backend'den state yükle ── */
+async function initState() {
+  try {
+    const res = await fetch('/api/state');
+    if (res.status === 401) {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      return;
+    }
+    const st = await res.json();
+
+    // Hesaplar
+    tokens      = st.tokens      || [];
+    totalLoaded = st.total_loaded || 0;
+    updateAccountUI();
+
+    // Favoriler (geçmişten önce — renderHistory favoritesData'ya bakar)
+    favoritesData = st.favorites || [];
+    renderFavorites();
+
+    // Geçmiş
+    historyData = st.history || [];
+    renderHistory();
+
+    // Job'lar — kartları oluştur, outputJobOrder'ı sorted by id (desc) yeniden kur
+    const jobs = st.jobs || {};
+    const sortedJobIds = Object.keys(jobs).sort((a, b) => Number(b) - Number(a));
+
+    for (const jobId of sortedJobIds) {
+      const job = jobs[jobId];
+      createJobCard(jobId, job.prompt);
+      if (job.status === 'success') {
+        renderSuccess(jobId, job.videoUrl, job.prompt);
+        knownJobStates[jobId] = 'success';
+      } else if (job.status === 'error') {
+        renderError(jobId, job.error);
+        knownJobStates[jobId] = 'error';
+      } else {
+        renderSteps(jobId, job.step || STEPS[0]);
+        knownJobStates[jobId] = 'running';
+      }
+    }
+
+    checkReady();
+  } catch (e) {
+    console.warn('State yüklenemedi, sıfırdan başlıyoruz.', e);
+    renderHistory();
+    renderFavorites();
+  }
+}
+
+// Auth kontrolü — sayfa yüklenince login gerekiyor mu?
 (async () => {
-  // Load persisted accounts
-  const accRes = await fetch('/api/accounts');
-  const accJson = await accRes.json();
-  tokens = accJson.accounts;
-  totalLoaded = accJson.total_loaded;
-  updateAccountUI();
-  checkReady();
-  // Load persisted history
-  await loadHistory();
+  try {
+    const res = await fetch('/api/auth-check');
+    const data = await res.json();
+    if (data.logged_in) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      initState();
+    } else {
+      document.getElementById('loginOverlay').classList.remove('hidden');
+    }
+  } catch {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+  }
 })();
 </script>
 </body>
