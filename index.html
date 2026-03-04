@@ -689,6 +689,138 @@
   }
   .logout-btn:hover { border-color: var(--error); color: var(--error); }
 
+  /* MODEL SELECTOR */
+  .model-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .model-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .model-card:hover { border-color: var(--accent); }
+  .model-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .model-radio {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    flex-shrink: 0;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .model-card.selected .model-radio {
+    border-color: var(--accent);
+  }
+  .model-card.selected .model-radio::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .model-info { flex: 1; min-width: 0; }
+  .model-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .model-badges { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
+
+  .model-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .model-badge.green  { color: var(--accent);  border-color: rgba(79,255,176,0.3);  background: rgba(79,255,176,0.08); }
+  .model-badge.blue   { color: var(--accent2); border-color: rgba(0,212,255,0.3);   background: rgba(0,212,255,0.08); }
+  .model-badge.muted  { color: var(--text-muted); border-color: var(--border2); background: transparent; }
+
+  /* DURATION PILLS */
+  .duration-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .dur-pill {
+    flex: 1;
+    min-width: 44px;
+    padding: 7px 0;
+    text-align: center;
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .dur-pill:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .dur-pill.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .dur-pill:disabled {
+    opacity: 0.28;
+    cursor: not-allowed;
+  }
+
+  /* VOICE TOGGLE */
+  .voice-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    transition: all 0.18s;
+  }
+  .voice-row.disabled-row { opacity: 0.38; pointer-events: none; }
+
+  .voice-label { display: flex; align-items: center; gap: 8px; }
+  .voice-label-text { font-size: 12px; font-weight: 700; }
+  .voice-label-sub  { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  .toggle-wrap { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--border2);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-wrap input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(16px); }
+
   input[type=file] { display: none; }
 
   /* MOBILE */
@@ -806,6 +938,9 @@
         <button class="tab-btn" id="tabBtnFavorites" onclick="switchTab('favorites')">
           ♥ Favoriler <span class="tab-count" id="favCount">0</span>
         </button>
+        <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('settings')">
+          ⚙ Ayarlar
+        </button>
       </div>
       <button class="tab-clear-btn" id="clearBtn" onclick="clearActive()">🗑 Temizle</button>
     </div>
@@ -860,6 +995,52 @@
       </div>
     </div>
 
+    <!-- SETTINGS TAB -->
+    <div class="tab-pane" id="paneSettings">
+      <div class="right-scroll" style="max-width:680px;margin:0 auto;width:100%">
+
+        <div style="margin-bottom:6px">
+          <div class="section-label">Model Seç</div>
+          <div class="model-grid" id="modelGrid"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
+
+          <div>
+            <div class="section-label">Süre</div>
+            <div class="duration-row" id="durationRow"></div>
+          </div>
+
+          <div>
+            <div class="section-label">Ses Efekti</div>
+            <div class="voice-row" id="voiceRow">
+              <div class="voice-label">
+                <span style="font-size:18px">🔊</span>
+                <div>
+                  <div class="voice-label-text">Ses Efekti</div>
+                  <div class="voice-label-sub" id="voiceSub">Model destekliyor</div>
+                </div>
+              </div>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="voiceToggle" onchange="onVoiceChange()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Seçili ayarların özeti -->
+        <div style="margin-top:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">Aktif seçim:</span>
+          <span class="model-badge green" id="summaryModel">—</span>
+          <span class="model-badge blue"  id="summaryDur">—</span>
+          <span class="model-badge muted" id="summaryVoice">—</span>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -894,6 +1075,119 @@ const STEPS = [
 
 const PAGE_SIZE = 5;
 
+// ── MODEL TANIMLARI ──────────────────────────────────────────────────────────
+const MODELS = [
+  {
+    id:        '17',
+    name:      'Lumen 2.3 Fast',
+    durations: ['6', '10'],
+    voice:     false,          // ses özelliği yok
+    audio_type_on: 0,
+  },
+  {
+    id:        '8',
+    name:      'Fluxon 2.0',
+    durations: ['5', '8'],
+    voice:     true,
+    audio_type_on: 1,
+  },
+  {
+    id:        '26',
+    name:      'Fluxon 3.0',
+    durations: ['5'],
+    voice:     true,
+    audio_type_on: 1,
+  },
+];
+
+let selectedModelId = '17';
+let selectedDuration = '6';
+let voiceEnabled     = false;
+
+function getModel(id) { return MODELS.find(m => m.id === id) || MODELS[0]; }
+
+function renderModelGrid() {
+  const grid = document.getElementById('modelGrid');
+  grid.innerHTML = MODELS.map(m => {
+    const sel = m.id === selectedModelId ? 'selected' : '';
+    const durLabel = m.durations.join(' / ') + 'sn';
+    const voiceBadge = m.voice
+      ? `<span class="model-badge blue">🔊 Ses</span>`
+      : `<span class="model-badge muted">🔇 Sessiz</span>`;
+    return `
+      <div class="model-card ${sel}" onclick="selectModel('${m.id}')">
+        <div class="model-radio"></div>
+        <div class="model-info">
+          <div class="model-name">${m.name}</div>
+          <div class="model-badges">
+            <span class="model-badge green">⏱ ${durLabel}</span>
+            ${voiceBadge}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderDurationRow() {
+  const model = getModel(selectedModelId);
+  const row   = document.getElementById('durationRow');
+  // Seçili duration bu modelde yoksa sıfırla
+  if (!model.durations.includes(selectedDuration)) {
+    selectedDuration = model.durations[0];
+  }
+  row.innerHTML = model.durations.map(d => {
+    const sel = d === selectedDuration ? 'selected' : '';
+    return `<button class="dur-pill ${sel}" onclick="selectDuration('${d}')">${d}sn</button>`;
+  }).join('');
+}
+
+function renderVoiceRow() {
+  const model   = getModel(selectedModelId);
+  const row     = document.getElementById('voiceRow');
+  const toggle  = document.getElementById('voiceToggle');
+  const sub     = document.getElementById('voiceSub');
+
+  if (!model.voice) {
+    row.classList.add('disabled-row');
+    toggle.checked  = false;
+    voiceEnabled    = false;
+    sub.textContent = 'Bu model ses desteklemiyor';
+  } else {
+    row.classList.remove('disabled-row');
+    toggle.checked  = voiceEnabled;
+    sub.textContent = voiceEnabled ? 'Ses efekti açık' : 'Ses efekti kapalı';
+  }
+}
+
+function updateSummary() {
+  const model = getModel(selectedModelId);
+  const hasVoice = model.voice && voiceEnabled;
+  document.getElementById('summaryModel').textContent  = model.name;
+  document.getElementById('summaryDur').textContent    = selectedDuration + 'sn';
+  document.getElementById('summaryVoice').textContent  = hasVoice ? '🔊 Ses açık' : '🔇 Ses kapalı';
+}
+
+function selectModel(id) {
+  selectedModelId = id;
+  if (!getModel(id).voice) voiceEnabled = false;
+  renderModelGrid();
+  renderDurationRow();
+  renderVoiceRow();
+  updateSummary();
+}
+
+function selectDuration(d) {
+  selectedDuration = d;
+  renderDurationRow();
+  updateSummary();
+}
+
+function onVoiceChange() {
+  voiceEnabled = document.getElementById('voiceToggle').checked;
+  document.getElementById('voiceSub').textContent = voiceEnabled ? 'Ses efekti açık' : 'Ses efekti kapalı';
+  updateSummary();
+}
+
 // Output pagination
 let outputJobOrder  = [];   // jobId'leri ekleniş sırasıyla (en yeni başta)
 let outputPage      = 1;
@@ -912,15 +1206,18 @@ function switchTab(tab) {
   document.getElementById('paneOutput').classList.toggle('active', tab === 'output');
   document.getElementById('paneHistory').classList.toggle('active', tab === 'history');
   document.getElementById('paneFavorites').classList.toggle('active', tab === 'favorites');
+  document.getElementById('paneSettings').classList.toggle('active', tab === 'settings');
   document.getElementById('tabBtnOutput').classList.toggle('active', tab === 'output');
   document.getElementById('tabBtnHistory').classList.toggle('active', tab === 'history');
   document.getElementById('tabBtnFavorites').classList.toggle('active', tab === 'favorites');
+  document.getElementById('tabBtnSettings').classList.toggle('active', tab === 'settings');
 }
 
 function clearActive() {
   if (currentTab === 'output') clearOutputs();
   else if (currentTab === 'history') clearHistory();
-  else clearFavorites();
+  else if (currentTab === 'favorites') clearFavorites();
+  // settings'de temizle butonu anlamsız — görmezden gel
 }
 
 function clearOutputs() {
@@ -962,6 +1259,10 @@ async function doLogin() {
     const data = await res.json();
     if (data.ok) {
       document.getElementById('loginOverlay').classList.add('hidden');
+      renderModelGrid();
+      renderDurationRow();
+      renderVoiceRow();
+      updateSummary();
       initState();
     } else {
       err.textContent = data.error || 'Hatalı şifre';
@@ -1226,17 +1527,23 @@ function renderSteps(jobId, activeStep) {
     </div>`;
 }
 
-function renderSuccess(jobId, videoUrl, prompt) {
+function renderSuccess(jobId, videoUrl, prompt, modelId, duration) {
   const el = document.getElementById('job-' + jobId);
   if (!el) return;
   const isFav = favoritesData.some(f => f.videoUrl === videoUrl);
   const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  const model = getModel(modelId || '17');
+  const dur   = duration || '?';
   el.innerHTML = `
     <div class="success-card">
       <div class="success-header">
         <div class="success-icon">✓</div>
         <div style="flex:1;min-width:0">
-          <div class="success-title">Video hazır! <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span></div>
+          <div class="success-title" style="display:flex;align-items:center;gap:8px">
+            Video hazır!
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span>
+            <span class="model-badge green" style="font-size:9px">${model.name} · ${dur}sn</span>
+          </div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
             <div class="success-sub" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapedPrompt}">${prompt}</div>
             <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${escapedPrompt}')">📋</button>
@@ -1290,6 +1597,9 @@ async function generate() {
 
   document.getElementById('submitBtn').disabled = true;
 
+  const model      = getModel(selectedModelId);
+  const audio_type = (model.voice && voiceEnabled) ? model.audio_type_on : 0;
+
   try {
     const res = await fetch('/api/generate', {
       method: 'POST',
@@ -1297,7 +1607,11 @@ async function generate() {
       body: JSON.stringify({
         imageBase64: imageBase64,
         imageName:   imageFile.name,
-        prompt:      prompt
+        prompt:      prompt,
+        model_id:    selectedModelId,
+        duration:    selectedDuration,
+        voice:       model.voice && voiceEnabled,
+        audio_type:  audio_type,
       })
     });
 
@@ -1350,7 +1664,7 @@ async function pollJobs() {
         // Her poll'da adımı güncelle
         renderSteps(jobId, job.step);
       } else if (job.status === 'success' && prev !== 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt);
+        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
       } else if (job.status === 'error' && prev !== 'error') {
         renderError(jobId, job.error);
       }
@@ -1632,7 +1946,7 @@ async function initState() {
       const job = jobs[jobId];
       createJobCard(jobId, job.prompt);
       if (job.status === 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt);
+        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
         knownJobStates[jobId] = 'success';
       } else if (job.status === 'error') {
         renderError(jobId, job.error);
@@ -1658,6 +1972,10 @@ async function initState() {
     const data = await res.json();
     if (data.logged_in) {
       document.getElementById('loginOverlay').classList.add('hidden');
+      renderModelGrid();
+      renderDurationRow();
+      renderVoiceRow();
+      updateSummary();
       initState();
     } else {
       document.getElementById('loginOverlay').classList.remove('hidden');
