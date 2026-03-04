@@ -284,9 +284,13 @@ def clear_finished_jobs():
 @login_required
 def generate():
     data         = request.get_json(force=True)
-    image_data   = data.get('imageBase64', '')   # full data URL (data:image/...;base64,...)
+    image_data   = data.get('imageBase64', '')
     image_name   = data.get('imageName', 'image.jpg')
     prompt       = data.get('prompt', '').strip()
+    model_id     = str(data.get('model_id', '17'))
+    duration     = str(data.get('duration', '10'))
+    voice        = bool(data.get('voice', False))
+    audio_type   = int(data.get('audio_type', 0))
 
     if not image_data or not prompt:
         return jsonify({'error': 'Eksik parametre'}), 400
@@ -296,7 +300,6 @@ def generate():
             return jsonify({'error': 'Hesap listesi boş. accounts.txt yükleyin.'}), 400
         token_line = state['tokens'][0]
         parts      = token_line.split(':')
-        # Format: something:something:TOKEN  (JS'deki gibi)
         token      = parts[2].strip() if len(parts) > 2 else token_line.strip()
         state['tokens'].pop(0)
 
@@ -306,19 +309,22 @@ def generate():
 
     with state_lock:
         state['jobs'][job_id] = {
-            'id':         job_id,
-            'prompt':     prompt,
-            'status':     'running',
-            'step':       'Başlatılıyor...',
-            'stepIndex':  -1,
-            'videoUrl':   None,
-            'error':      None,
-            'createdAt':  datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+            'id':        job_id,
+            'prompt':    prompt,
+            'model_id':  model_id,
+            'duration':  duration,
+            'voice':     voice,
+            'status':    'running',
+            'step':      'Başlatılıyor...',
+            'stepIndex': -1,
+            'videoUrl':  None,
+            'error':     None,
+            'createdAt': datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
         }
 
     t = threading.Thread(
         target=run_generation,
-        args=(job_id, token, image_data, image_name, prompt),
+        args=(job_id, token, image_data, image_name, prompt, model_id, duration, voice, audio_type),
         daemon=True
     )
     t.start()
@@ -336,7 +342,8 @@ STEPS = [
     'Video bekleniyor...'
 ]
 
-def run_generation(job_id, token, image_data_url, image_name, prompt):
+def run_generation(job_id, token, image_data_url, image_name, prompt,
+                   model_id='17', duration='10', voice=False, audio_type=0):
     try:
         # Base64 verisini ayır
         if ',' in image_data_url:
@@ -440,20 +447,19 @@ def run_generation(job_id, token, image_data_url, image_name, prompt):
             json={
                 'type': 17,
                 'attrs': [{
-                    'enhance':         True,
+                    'enhance':         False,
                     'prompt':          prompt,
                     'camera_control':  'auto',
                     'from':            'image',
                     'imageFrom':       'cloud',
-                    'img_style_id':    '111',
                     'is_scale':        0,
                     'materialId':      str(material_id),
                     'negative_prompt': '',
-                    'voice':           False,
-                    'model_id':        '17',
+                    'voice':           voice,
+                    'model_id':        model_id,
                     'biz_type':        17,
-                    'duration':        '10',
-                    'audio_type':      0,
+                    'duration':        duration,
+                    'audio_type':      audio_type,
                     'camerafixed':     False,
                     'source_image':    source_image,
                     'urls':            {'url': source_image}
