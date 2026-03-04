@@ -1,1989 +1,548 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClipFly Auto</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0c0d10;
-    --surface: #13151a;
-    --surface2: #1a1d24;
-    --border: #252830;
-    --border2: #2e3340;
-    --accent: #4fffb0;
-    --accent2: #00d4ff;
-    --accent-dim: rgba(79,255,176,0.08);
-    --accent-glow: rgba(79,255,176,0.15);
-    --text: #e8eaf0;
-    --text-muted: #6b7280;
-    --text-dim: #9ca3af;
-    --error: #ff5266;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html, body { height: 100%; overflow: hidden; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    display: flex;
-    flex-direction: column;
-  }
-
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      linear-gradient(rgba(79,255,176,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(79,255,176,0.025) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* TOPBAR */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    height: 54px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10;
-    gap: 16px;
-  }
-
-  .logo { display: flex; align-items: center; gap: 10px; }
-
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px;
-  }
-
-  .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
-  .logo-text span { color: var(--accent); }
-  .logo-text em { color: var(--text-muted); font-style: normal; font-weight: 400; font-size: 13px; }
-
-  .badge {
-    display: flex; align-items: center; gap: 7px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 100px;
-    padding: 5px 14px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .badge-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .badge-dot.gray { background: var(--text-muted); animation: none; }
-
-  /* WORKSPACE */
-  .workspace {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* LEFT PANEL */
-  .left-panel {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--surface);
-  }
-
-  .left-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .left-scroll::-webkit-scrollbar { width: 4px; }
-  .left-scroll::-webkit-scrollbar-track { background: transparent; }
-  .left-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-  .left-footer {
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  /* RIGHT PANEL */
-  .right-panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* TABS */
-  .tab-bar {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    padding: 0 20px;
-    flex-shrink: 0;
-    justify-content: space-between;
-  }
-
-  .tab-left { display: flex; gap: 0; }
-
-  .tab-btn {
-    padding: 14px 18px;
-    font-size: 12px; font-weight: 700;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Syne', sans-serif;
-    margin-bottom: -1px;
-    display: flex; align-items: center; gap: 7px;
-  }
-
-  .tab-btn:hover { color: var(--text-dim); }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  .tab-count {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 100px;
-    padding: 1px 7px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-  }
-
-  .tab-btn.active .tab-count { border-color: rgba(79,255,176,0.3); color: var(--accent); }
-
-  .tab-clear-btn {
-    padding: 5px 12px;
-    font-size: 11px; font-weight: 600;
-    color: var(--text-muted);
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Syne', sans-serif;
-    display: flex; align-items: center; gap: 5px;
-  }
-
-  .tab-clear-btn:hover { border-color: var(--error); color: var(--error); }
-
-  .tab-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-  .tab-pane.active { display: flex; }
-
-  .right-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .right-scroll::-webkit-scrollbar { width: 4px; }
-  .right-scroll::-webkit-scrollbar-track { background: transparent; }
-  .right-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-  /* SECTION LABEL */
-  .section-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .section-label::before {
-    content: '';
-    width: 12px; height: 2px;
-    background: var(--accent);
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  /* CARD */
-  .card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-  }
-
-  /* ACCOUNTS */
-  .acc-row { display: flex; align-items: center; gap: 12px; }
-
-  .file-btn {
-    padding: 8px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    color: var(--text-dim);
-    font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex; align-items: center; gap: 6px;
-    white-space: nowrap; flex-shrink: 0;
-  }
-
-  .file-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .acc-info { flex: 1; min-width: 0; }
-
-  .acc-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 22px; font-weight: 500;
-    color: var(--accent); line-height: 1;
-  }
-
-  .acc-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  .acc-bar-wrap {
-    width: 100%; height: 2px;
-    background: var(--border); border-radius: 2px;
-    overflow: hidden; margin-top: 8px;
-  }
-
-  .acc-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  /* IMAGE ZONE */
-  .image-zone {
-    border: 2px dashed var(--border2);
-    border-radius: var(--radius-sm);
-    min-height: 140px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative; overflow: hidden;
-    background: var(--surface);
-  }
-
-  .image-zone:hover, .image-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
-  .image-zone.loaded { border-style: solid; border-color: var(--border2); min-height: unset; }
-  .image-zone.loaded:hover { border-color: var(--accent); }
-
-  .img-preview { width: 100%; max-height: 200px; object-fit: cover; display: block; border-radius: calc(var(--radius-sm) - 2px); }
-
-  .img-overlay {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.2s;
-    font-size: 13px; font-weight: 600;
-  }
-
-  .image-zone.loaded:hover .img-overlay { opacity: 1; }
-
-  .img-fname {
-    position: absolute; bottom: 8px; left: 8px;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
-    padding: 3px 8px; border-radius: 5px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px; color: var(--accent);
-  }
-
-  .ph { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px; }
-
-  .ph-icon {
-    width: 44px; height: 44px;
-    border: 2px solid var(--border2); border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; background: var(--surface2);
-  }
-
-  .ph p { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-  .ph small { font-size: 11px; color: var(--text-muted); opacity: 0.6; }
-
-  /* TEXTAREA */
-  .prompt-wrap { position: relative; }
-
-  textarea {
-    width: 100%; height: 90px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    padding: 12px; resize: none; outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    line-height: 1.6;
-  }
-
-  textarea::placeholder { color: var(--text-muted); }
-  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-
-  .char-count {
-    position: absolute; bottom: 8px; right: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px; color: var(--text-muted);
-  }
-
-  /* SUBMIT */
-  .btn-primary {
-    width: 100%; padding: 13px 24px;
-    border: none; border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-    color: #0a0c10;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    position: relative; overflow: hidden;
-  }
-
-  .btn-primary::before { content: ''; position: absolute; inset: 0; background: white; opacity: 0; transition: opacity 0.2s; }
-  .btn-primary:hover::before { opacity: 0.08; }
-  .btn-primary:active { transform: scale(0.99); }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-  /* EMPTY STATE */
-  .empty-state {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 14px; color: var(--text-muted);
-    text-align: center; padding: 40px;
-  }
-
-  .empty-icon {
-    width: 64px; height: 64px;
-    border: 2px solid var(--border2); border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; background: var(--surface);
-  }
-
-  .empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text-dim); }
-  .empty-state p { font-size: 13px; max-width: 260px; line-height: 1.6; }
-
-  /* STATUS */
-  .status-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    animation: fadeUp 0.3s ease;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .status-header {
-    padding: 16px 20px;
-    display: flex; align-items: center; gap: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .spinner {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border2); border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite; flex-shrink: 0;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .status-title { font-size: 14px; font-weight: 700; }
-  .status-step { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); margin-top: 2px; }
-
-  .steps-list { padding: 14px 20px; display: flex; flex-direction: column; gap: 9px; }
-
-  .step-item {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 11px; color: var(--text-muted);
-    font-family: 'DM Mono', monospace;
-    transition: color 0.3s;
-  }
-
-  .step-item.done { color: var(--text-muted); }
-  .step-item.active { color: var(--text); }
-
-  .step-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--border2); flex-shrink: 0;
-    transition: background 0.3s;
-  }
-
-  .step-item.done .step-dot { background: var(--accent); }
-  .step-item.active .step-dot {
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-
-  /* SUCCESS */
-  .success-card {
-    background: var(--surface);
-    border: 1px solid rgba(79,255,176,0.22);
-    border-radius: var(--radius); overflow: hidden;
-    animation: fadeUp 0.4s ease;
-  }
-
-  .success-header {
-    padding: 14px 20px;
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(79,255,176,0.05);
-    border-bottom: 1px solid rgba(79,255,176,0.12);
-  }
-
-  .success-icon {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(79,255,176,0.15);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: var(--accent); flex-shrink: 0;
-  }
-
-  .success-title { font-size: 14px; font-weight: 700; color: var(--accent); }
-  .success-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-
-  .video-player { width: 100%; max-height: 360px; background: #000; display: block; }
-
-  .video-actions { padding: 12px 20px; display: flex; gap: 8px; flex-wrap: wrap; }
-
-  .btn-sm {
-    padding: 8px 16px; border-radius: 7px;
-    font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; gap: 6px;
-    text-decoration: none; border: none;
-  }
-
-  .btn-green { background: rgba(79,255,176,0.1); color: var(--accent); border: 1px solid rgba(79,255,176,0.3) !important; }
-  .btn-green:hover { background: rgba(79,255,176,0.2); }
-  .btn-outline { background: transparent; color: var(--text-dim); border: 1px solid var(--border2) !important; }
-  .btn-outline:hover { border-color: var(--accent) !important; color: var(--accent); }
-  .btn-danger { background: rgba(255,82,102,0.1); color: var(--error); border: 1px solid rgba(255,82,102,0.3) !important; }
-  .btn-danger:hover { background: rgba(255,82,102,0.2); }
-
-  /* ERROR */
-  .error-card {
-    padding: 16px 20px;
-    background: rgba(255,82,102,0.07);
-    border: 1px solid rgba(255,82,102,0.2);
-    border-radius: var(--radius-sm);
-    display: flex; align-items: flex-start; gap: 10px;
-    animation: fadeUp 0.3s ease;
-  }
-
-  .error-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .error-title { font-size: 13px; font-weight: 600; color: var(--error); margin-bottom: 3px; }
-  .error-msg { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); word-break: break-word; }
-
-  /* HISTORY TAB */
-  .history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .history-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: flex;
-    gap: 0;
-    transition: border-color 0.2s;
-    cursor: pointer;
-  }
-
-  .history-card:hover { border-color: var(--accent); }
-
-  .history-thumb-wrap { flex-shrink: 0; width: 120px; }
-  .history-thumb { width: 120px; height: 80px; object-fit: cover; display: block; background: var(--bg); }
-
-  .history-card-info {
-    padding: 10px 14px;
-    display: flex; flex-direction: column; justify-content: center; gap: 4px;
-    flex: 1; min-width: 0;
-  }
-
-  .history-card-prompt { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-  .history-card-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
-  .history-card-actions { display: flex; gap: 6px; margin-top: 6px; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
-
-  .btn-fav {
-    background: transparent;
-    border: 1px solid var(--border2) !important;
-    color: var(--text-muted);
-    transition: all 0.2s;
-  }
-  .btn-fav:hover { border-color: #ff6b9d !important; color: #ff6b9d; }
-  .btn-fav.active { background: rgba(255,107,157,0.12); border-color: rgba(255,107,157,0.5) !important; color: #ff6b9d; }
-
-  .btn-copy-prompt {
-    padding: 4px 7px;
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: 5px;
-    color: var(--text-muted);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex-shrink: 0;
-  }
-  .btn-copy-prompt:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* LOGIN OVERLAY */
-  .login-overlay {
-    position: fixed; inset: 0;
-    background: rgba(12,13,16,0.97);
-    backdrop-filter: blur(12px);
-    z-index: 1000;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .login-overlay.hidden { display: none; }
-
-  .login-box {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 16px;
-    padding: 36px 32px;
-    width: 100%; max-width: 360px;
-    display: flex; flex-direction: column; gap: 20px;
-    position: relative;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-  }
-
-  .login-logo {
-    display: flex; align-items: center; gap: 10px; justify-content: center;
-    margin-bottom: 4px;
-  }
-
-  .login-title {
-    font-size: 20px; font-weight: 800; text-align: center; letter-spacing: -0.5px;
-  }
-  .login-sub {
-    font-size: 12px; color: var(--text-muted); text-align: center; margin-top: -12px;
-  }
-
-  .login-field { display: flex; flex-direction: column; gap: 7px; }
-  .login-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
-
-  .login-input {
-    width: 100%; padding: 11px 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 14px; outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    letter-spacing: 2px;
-  }
-  .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-
-  .login-error {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px; color: var(--error);
-    text-align: center; min-height: 16px;
-  }
-
-  .login-btn {
-    width: 100%; padding: 13px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none; border-radius: var(--radius-sm);
-    color: #0a0c10; font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700; cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .login-btn:hover { opacity: 0.9; }
-  .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* PAGINATION */
-  .pagination {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    background: var(--surface);
-  }
-
-  .pg-btn {
-    padding: 5px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    color: var(--text-dim);
-    font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  .pg-info {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px; color: var(--text-muted);
-    padding: 0 6px; min-width: 80px; text-align: center;
-  }
-
-  .pg-num {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px; color: var(--text-muted);
-    cursor: pointer; transition: all 0.2s;
-  }
-  .pg-num:hover { border-color: var(--accent); color: var(--accent); }
-  .pg-num.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
-
-  /* TOPBAR logout btn */
-  .logout-btn {
-    padding: 5px 12px;
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .logout-btn:hover { border-color: var(--error); color: var(--error); }
-
-  /* MODEL SELECTOR */
-  .model-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-
-  .model-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1.5px solid var(--border2);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all 0.18s;
-    user-select: none;
-  }
-  .model-card:hover { border-color: var(--accent); }
-  .model-card.selected {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  .model-radio {
-    width: 15px; height: 15px;
-    border-radius: 50%;
-    border: 2px solid var(--border2);
-    flex-shrink: 0;
-    transition: all 0.18s;
-    position: relative;
-  }
-  .model-card.selected .model-radio {
-    border-color: var(--accent);
-  }
-  .model-card.selected .model-radio::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
-  .model-info { flex: 1; min-width: 0; }
-  .model-name { font-size: 12px; font-weight: 700; color: var(--text); }
-  .model-badges { display: flex; gap: 5px; margin-top: 3px; flex-wrap: wrap; }
-
-  .model-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px; font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid;
-  }
-  .model-badge.green  { color: var(--accent);  border-color: rgba(79,255,176,0.3);  background: rgba(79,255,176,0.08); }
-  .model-badge.blue   { color: var(--accent2); border-color: rgba(0,212,255,0.3);   background: rgba(0,212,255,0.08); }
-  .model-badge.muted  { color: var(--text-muted); border-color: var(--border2); background: transparent; }
-
-  /* DURATION PILLS */
-  .duration-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .dur-pill {
-    flex: 1;
-    min-width: 44px;
-    padding: 7px 0;
-    text-align: center;
-    background: var(--surface);
-    border: 1.5px solid var(--border2);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px; font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.18s;
-  }
-  .dur-pill:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .dur-pill.selected {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-    color: var(--accent);
-    font-weight: 700;
-  }
-  .dur-pill:disabled {
-    opacity: 0.28;
-    cursor: not-allowed;
-  }
-
-  /* VOICE TOGGLE */
-  .voice-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1.5px solid var(--border2);
-    border-radius: var(--radius-sm);
-    transition: all 0.18s;
-  }
-  .voice-row.disabled-row { opacity: 0.38; pointer-events: none; }
-
-  .voice-label { display: flex; align-items: center; gap: 8px; }
-  .voice-label-text { font-size: 12px; font-weight: 700; }
-  .voice-label-sub  { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
-
-  .toggle-wrap { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
-  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
-  .toggle-slider {
-    position: absolute; inset: 0;
-    background: var(--border2);
-    border-radius: 11px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 16px; height: 16px;
-    left: 3px; top: 3px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-  .toggle-wrap input:checked + .toggle-slider { background: var(--accent); }
-  .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(16px); }
-
-  input[type=file] { display: none; }
-
-  /* MOBILE */
-  @media (max-width: 700px) {
-    html, body { height: auto; overflow: auto; }
-    .workspace { grid-template-columns: 1fr; height: auto; }
-    .left-panel { border-right: none; border-bottom: 1px solid var(--border); }
-    .left-scroll { overflow: visible; }
-    .right-panel { min-height: 400px; }
-    .right-scroll { overflow: visible; }
-  }
-</style>
-</head>
-<body>
-
-<!-- LOGIN OVERLAY -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="logo-icon">🎬</div>
-      <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px">Clip<span style="color:var(--accent)">Fly</span> <span style="color:var(--text-muted);font-weight:400;font-size:13px">Auto</span></div>
-    </div>
-    <div class="login-title">Giriş Yap</div>
-    <div class="login-sub">Devam etmek için şifrenizi girin</div>
-    <div class="login-field">
-      <div class="login-label">Şifre</div>
-      <input class="login-input" type="password" id="loginPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Giriş Yap</button>
-  </div>
-</div>
-
-<div class="topbar">
-  <div class="logo">
-    <div class="logo-icon">🎬</div>
-    <div class="logo-text">Clip<span>Fly</span> <em>Auto</em></div>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="badge">
-      <div class="badge-dot gray" id="badgeDot"></div>
-      <span id="badgeText">hesap yüklenmedi</span>
-    </div>
-    <button class="logout-btn" onclick="doLogout()">⏻ Çıkış</button>
-  </div>
-</div>
-
-<div class="workspace">
-
-  <!-- LEFT: inputs -->
-  <div class="left-panel">
-    <div class="left-scroll">
-
-      <div>
-        <div class="section-label">Hesap Listesi</div>
-        <div class="card">
-          <div class="acc-row">
-            <button class="file-btn" onclick="document.getElementById('accFile').click()">
-              📂 accounts.txt
-            </button>
-            <div class="acc-info">
-              <div class="acc-num" id="accountNum">0</div>
-              <div class="acc-sub" id="accountLabel">Henüz yüklenmedi</div>
-            </div>
-          </div>
-          <div class="acc-bar-wrap">
-            <div class="acc-bar-fill" id="accountBar" style="width:0%"></div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-label">Kaynak Görsel</div>
-        <div class="image-zone" id="imageZone" onclick="document.getElementById('imgFile').click()">
-          <div class="ph" id="imgPlaceholder">
-            <div class="ph-icon">🖼️</div>
-            <p>Görseli sürükle veya tıkla</p>
-            <small>JPG · PNG · WEBP · GIF</small>
-          </div>
-          <img id="imgPreview" class="img-preview" style="display:none" alt="">
-          <div class="img-overlay">🔄 Değiştir</div>
-          <div class="img-fname" id="imgName" style="display:none"></div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-label">Prompt</div>
-        <div class="prompt-wrap">
-          <textarea id="prompt" placeholder="Görselin nasıl canlanmasını istiyorsun?" maxlength="500" oninput="updateChar()"></textarea>
-          <span class="char-count" id="charCount">0/500</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="left-footer">
-      <button class="btn-primary" id="submitBtn" onclick="generate()" disabled>
-        <span>⚡</span>
-        <span id="btnText">Video Oluştur</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- RIGHT: output + history tabs -->
-  <div class="right-panel">
-
-    <div class="tab-bar">
-      <div class="tab-left">
-        <button class="tab-btn active" id="tabBtnOutput" onclick="switchTab('output')">
-          🎬 Çıktılar <span class="tab-count" id="outputCount">0</span>
-        </button>
-        <button class="tab-btn" id="tabBtnHistory" onclick="switchTab('history')">
-          🕓 Geçmiş <span class="tab-count" id="historyCount">0</span>
-        </button>
-        <button class="tab-btn" id="tabBtnFavorites" onclick="switchTab('favorites')">
-          ♥ Favoriler <span class="tab-count" id="favCount">0</span>
-        </button>
-        <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('settings')">
-          ⚙ Ayarlar
-        </button>
-      </div>
-      <button class="tab-clear-btn" id="clearBtn" onclick="clearActive()">🗑 Temizle</button>
-    </div>
-
-    <!-- OUTPUTS TAB -->
-    <div class="tab-pane active" id="paneOutput">
-      <div class="right-scroll" id="statusArea">
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">🎥</div>
-          <h3>Video çıktısı burada görünür</h3>
-          <p>Sol panelden hesap, görsel ve prompt ekle, ardından başlat.</p>
-        </div>
-      </div>
-      <div class="pagination" id="pgOutput" style="display:none">
-        <button class="pg-btn" id="pgOutPrev" onclick="changeOutputPage(-1)">‹ Önceki</button>
-        <div class="pg-info" id="pgOutInfo">1 / 1</div>
-        <button class="pg-btn" id="pgOutNext" onclick="changeOutputPage(1)">Sonraki ›</button>
-      </div>
-    </div>
-
-    <!-- HISTORY TAB -->
-    <div class="tab-pane" id="paneHistory">
-      <div class="right-scroll" id="historyArea">
-        <div class="empty-state" id="emptyHistory">
-          <div class="empty-icon">🕓</div>
-          <h3>Henüz geçmiş yok</h3>
-          <p>Oluşturulan videolar burada listelenir.</p>
-        </div>
-        <div class="history-list" id="historyList"></div>
-      </div>
-      <div class="pagination" id="pgHistory" style="display:none">
-        <button class="pg-btn" id="pgHistPrev" onclick="changeHistoryPage(-1)">‹ Önceki</button>
-        <div class="pg-info" id="pgHistInfo">1 / 1</div>
-        <button class="pg-btn" id="pgHistNext" onclick="changeHistoryPage(1)">Sonraki ›</button>
-      </div>
-    </div>
-
-    <!-- FAVORITES TAB -->
-    <div class="tab-pane" id="paneFavorites">
-      <div class="right-scroll" id="favArea">
-        <div class="empty-state" id="emptyFavorites">
-          <div class="empty-icon">♥</div>
-          <h3>Henüz favori yok</h3>
-          <p>Geçmişten veya çıktılardan ♥ ile favorilere ekle.</p>
-        </div>
-        <div class="history-list" id="favoritesList"></div>
-      </div>
-      <div class="pagination" id="pgFavorites" style="display:none">
-        <button class="pg-btn" id="pgFavPrev" onclick="changeFavPage(-1)">‹ Önceki</button>
-        <div class="pg-info" id="pgFavInfo">1 / 1</div>
-        <button class="pg-btn" id="pgFavNext" onclick="changeFavPage(1)">Sonraki ›</button>
-      </div>
-    </div>
-
-    <!-- SETTINGS TAB -->
-    <div class="tab-pane" id="paneSettings">
-      <div class="right-scroll" style="max-width:680px;margin:0 auto;width:100%">
-
-        <div style="margin-bottom:6px">
-          <div class="section-label">Model Seç</div>
-          <div class="model-grid" id="modelGrid"></div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
-
-          <div>
-            <div class="section-label">Süre</div>
-            <div class="duration-row" id="durationRow"></div>
-          </div>
-
-          <div>
-            <div class="section-label">Ses Efekti</div>
-            <div class="voice-row" id="voiceRow">
-              <div class="voice-label">
-                <span style="font-size:18px">🔊</span>
-                <div>
-                  <div class="voice-label-text">Ses Efekti</div>
-                  <div class="voice-label-sub" id="voiceSub">Model destekliyor</div>
-                </div>
-              </div>
-              <label class="toggle-wrap">
-                <input type="checkbox" id="voiceToggle" onchange="onVoiceChange()">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Seçili ayarların özeti -->
-        <div style="margin-top:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">Aktif seçim:</span>
-          <span class="model-badge green" id="summaryModel">—</span>
-          <span class="model-badge blue"  id="summaryDur">—</span>
-          <span class="model-badge muted" id="summaryVoice">—</span>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<input type="file" id="accFile" accept=".txt" onchange="loadAccounts(event)">
-<input type="file" id="imgFile" accept="image/*" onchange="loadImage(event)">
-
-<script>
-/* ═══════════════════════════════════════════════════════════════════════════
-   ClipFly Auto — Backend-aware frontend
-   Tüm API çağrıları Flask backend üzerinden gider.
-   State (hesaplar, job'lar, geçmiş) RAM + data.json'da yaşar.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-let tokens = [];
-let totalLoaded = 0;
-let imageFile = null;
-let imageBase64 = null;
-let historyData = [];
-let outputCardCount = 0;
-
-// Bilinen job state'leri — sadece UI update kontrolü için
-const knownJobStates = {};
-
-const STEPS = [
-  'Signed URL alınıyor...',
-  'Resim yükleniyor (base64)...',
-  'Resim yükleniyor (raw)...',
-  'Materyal oluşturuluyor...',
-  'Görev kuyruğa alınıyor...',
-  'Video bekleniyor...'
-];
-
-const PAGE_SIZE = 5;
-
-// ── MODEL TANIMLARI ──────────────────────────────────────────────────────────
-const MODELS = [
-  {
-    id:        '17',
-    name:      'Lumen 2.3 Fast',
-    durations: ['6', '10'],
-    voice:     false,          // ses özelliği yok
-    audio_type_on: 0,
-  },
-  {
-    id:        '8',
-    name:      'Fluxon 2.0',
-    durations: ['5', '8'],
-    voice:     true,
-    audio_type_on: 1,
-  },
-  {
-    id:        '26',
-    name:      'Fluxon 3.0',
-    durations: ['5'],
-    voice:     true,
-    audio_type_on: 1,
-  },
-];
-
-let selectedModelId = '17';
-let selectedDuration = '6';
-let voiceEnabled     = false;
-
-function getModel(id) { return MODELS.find(m => m.id === id) || MODELS[0]; }
-
-function renderModelGrid() {
-  const grid = document.getElementById('modelGrid');
-  grid.innerHTML = MODELS.map(m => {
-    const sel = m.id === selectedModelId ? 'selected' : '';
-    const durLabel = m.durations.join(' / ') + 'sn';
-    const voiceBadge = m.voice
-      ? `<span class="model-badge blue">🔊 Ses</span>`
-      : `<span class="model-badge muted">🔇 Sessiz</span>`;
-    return `
-      <div class="model-card ${sel}" onclick="selectModel('${m.id}')">
-        <div class="model-radio"></div>
-        <div class="model-info">
-          <div class="model-name">${m.name}</div>
-          <div class="model-badges">
-            <span class="model-badge green">⏱ ${durLabel}</span>
-            ${voiceBadge}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderDurationRow() {
-  const model = getModel(selectedModelId);
-  const row   = document.getElementById('durationRow');
-  // Seçili duration bu modelde yoksa sıfırla
-  if (!model.durations.includes(selectedDuration)) {
-    selectedDuration = model.durations[0];
-  }
-  row.innerHTML = model.durations.map(d => {
-    const sel = d === selectedDuration ? 'selected' : '';
-    return `<button class="dur-pill ${sel}" onclick="selectDuration('${d}')">${d}sn</button>`;
-  }).join('');
-}
-
-function renderVoiceRow() {
-  const model   = getModel(selectedModelId);
-  const row     = document.getElementById('voiceRow');
-  const toggle  = document.getElementById('voiceToggle');
-  const sub     = document.getElementById('voiceSub');
-
-  if (!model.voice) {
-    row.classList.add('disabled-row');
-    toggle.checked  = false;
-    voiceEnabled    = false;
-    sub.textContent = 'Bu model ses desteklemiyor';
-  } else {
-    row.classList.remove('disabled-row');
-    toggle.checked  = voiceEnabled;
-    sub.textContent = voiceEnabled ? 'Ses efekti açık' : 'Ses efekti kapalı';
-  }
-}
-
-function updateSummary() {
-  const model = getModel(selectedModelId);
-  const hasVoice = model.voice && voiceEnabled;
-  document.getElementById('summaryModel').textContent  = model.name;
-  document.getElementById('summaryDur').textContent    = selectedDuration + 'sn';
-  document.getElementById('summaryVoice').textContent  = hasVoice ? '🔊 Ses açık' : '🔇 Ses kapalı';
-}
-
-function selectModel(id) {
-  selectedModelId = id;
-  if (!getModel(id).voice) voiceEnabled = false;
-  renderModelGrid();
-  renderDurationRow();
-  renderVoiceRow();
-  updateSummary();
-}
-
-function selectDuration(d) {
-  selectedDuration = d;
-  renderDurationRow();
-  updateSummary();
-}
-
-function onVoiceChange() {
-  voiceEnabled = document.getElementById('voiceToggle').checked;
-  document.getElementById('voiceSub').textContent = voiceEnabled ? 'Ses efekti açık' : 'Ses efekti kapalı';
-  updateSummary();
-}
-
-// Output pagination
-let outputJobOrder  = [];   // jobId'leri ekleniş sırasıyla (en yeni başta)
-let outputPage      = 1;
-
-// History pagination
-let historyPage     = 1;
-
-// Favorites pagination
-let favPage         = 1;
-
-/* ── TABS ── */
-let currentTab = 'output';
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('paneOutput').classList.toggle('active', tab === 'output');
-  document.getElementById('paneHistory').classList.toggle('active', tab === 'history');
-  document.getElementById('paneFavorites').classList.toggle('active', tab === 'favorites');
-  document.getElementById('paneSettings').classList.toggle('active', tab === 'settings');
-  document.getElementById('tabBtnOutput').classList.toggle('active', tab === 'output');
-  document.getElementById('tabBtnHistory').classList.toggle('active', tab === 'history');
-  document.getElementById('tabBtnFavorites').classList.toggle('active', tab === 'favorites');
-  document.getElementById('tabBtnSettings').classList.toggle('active', tab === 'settings');
-}
-
-function clearActive() {
-  if (currentTab === 'output') clearOutputs();
-  else if (currentTab === 'history') clearHistory();
-  else if (currentTab === 'favorites') clearFavorites();
-  // settings'de temizle butonu anlamsız — görmezden gel
-}
-
-function clearOutputs() {
-  if (!outputCardCount) return;
-  if (!confirm('Tüm çıktı kartları silinsin mi?')) return;
-  const area = document.getElementById('statusArea');
-  area.querySelectorAll('[data-job]').forEach(el => el.remove());
-  outputCardCount = 0;
-  outputJobOrder  = [];
-  outputPage      = 1;
-  document.getElementById('outputCount').textContent = '0';
-  document.getElementById('emptyState').style.display = 'flex';
-  document.getElementById('pgOutput').style.display = 'none';
-  fetch('/api/jobs', { method: 'DELETE' });
-}
-
-function clearHistory() {
-  if (!historyData.length) return;
-  if (!confirm('Tüm geçmiş silinsin mi?')) return;
-  fetch('/api/history', { method: 'DELETE' });
-  historyData = [];
-  renderHistory();
-}
-
-/* ── LOGIN ── */
-async function doLogin() {
-  const pwd = document.getElementById('loginPwd').value;
-  const btn = document.getElementById('loginBtn');
-  const err = document.getElementById('loginError');
-  if (!pwd) { err.textContent = 'Şifre boş olamaz'; return; }
-  btn.disabled = true;
-  err.textContent = '';
-  try {
-    const res  = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ password: pwd })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      document.getElementById('loginOverlay').classList.add('hidden');
-      renderModelGrid();
-      renderDurationRow();
-      renderVoiceRow();
-      updateSummary();
-      initState();
-    } else {
-      err.textContent = data.error || 'Hatalı şifre';
-      document.getElementById('loginPwd').value = '';
+from flask import Flask, request, jsonify, send_from_directory, session
+from functools import wraps
+import requests
+import json
+import os
+import threading
+import time
+import base64
+from datetime import datetime
+
+app = Flask(__name__, static_folder='.')
+app.secret_key = 'clipfly-auto-secret-2024'
+
+ADMIN_PASSWORD = '123'
+
+BASE = 'https://www.clipfly.ai'
+
+# ── CLIPFLY HEADERS (orijinal ile birebir aynı) ──────────────────────────────
+def clipfly_headers(token, extra=None):
+    h = {
+        'accept': 'application/json',
+        'accept-language': 'en-US,en;q=0.8',
+        'authorization': token,
+        'content-type': 'application/json',
+        'origin': BASE,
+        'platform': 'web',
+        'priority': 'u=1, i',
+        'referer': BASE + '/aitools/ai-video-generator-v2',
+        'sec-ch-ua': '"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+        'zone': '180',
     }
-  } catch (e) {
-    err.textContent = 'Sunucuya bağlanılamadı';
-  } finally {
-    btn.disabled = false;
-  }
+    if extra:
+        h.update(extra)
+    return h
+
+# ── STATE ────────────────────────────────────────────────────────────────────
+state_lock = threading.Lock()
+state = {
+    'tokens': [],
+    'total_loaded': 0,
+    'jobs': {},        # jobId -> job dict  (RAM'de yaşar, finished olanlar JSON'a yazılır)
+    'history': [],
+    'favorites': []
 }
 
-async function doLogout() {
-  await fetch('/api/logout', { method: 'POST' });
-  location.reload();
-}
+DATA_FILE = os.path.join(os.path.dirname(__file__), 'data.json')
 
-/* ── OUTPUT PAGINATION ── */
-function applyOutputPagination() {
-  const total = outputJobOrder.length;
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (outputPage > pages) outputPage = pages;
+def load_from_disk():
+    if not os.path.exists(DATA_FILE):
+        return
+    try:
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
+            saved = json.load(f)
+        with state_lock:
+            state['tokens']       = saved.get('tokens', [])
+            state['total_loaded'] = saved.get('total_loaded', 0)
+            state['history']      = saved.get('history', [])
+            state['favorites']    = saved.get('favorites', [])
+            # Sadece tamamlanan / hata veren job'ları restore et
+            for jid, job in saved.get('jobs', {}).items():
+                if job.get('status') in ('success', 'error'):
+                    state['jobs'][jid] = job
+        print(f'[BOOT] {len(state["tokens"])} hesap, {len(state["history"])} geçmiş, {len(state["jobs"])} job yüklendi.')
+    except Exception as e:
+        print(f'[BOOT] State yüklenemedi: {e}')
 
-  const start = (outputPage - 1) * PAGE_SIZE;
-  const end   = start + PAGE_SIZE;
-
-  // Tüm job kartlarını gizle/göster
-  document.querySelectorAll('#statusArea [data-job]').forEach((el, i) => {
-    // outputJobOrder'daki index (en yeni = 0)
-    const jobId = el.getAttribute('data-job');
-    const idx   = outputJobOrder.indexOf(jobId);
-    el.style.display = (idx >= start && idx < end) ? '' : 'none';
-  });
-
-  // emptyState
-  const hasVisible = total > 0;
-  document.getElementById('emptyState').style.display = hasVisible ? 'none' : 'flex';
-
-  // Pagination bar
-  const pg = document.getElementById('pgOutput');
-  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
-  document.getElementById('pgOutInfo').textContent = `${outputPage} / ${pages}`;
-  document.getElementById('pgOutPrev').disabled = outputPage <= 1;
-  document.getElementById('pgOutNext').disabled = outputPage >= pages;
-}
-
-function changeOutputPage(dir) {
-  outputPage += dir;
-  applyOutputPagination();
-  document.getElementById('statusArea').scrollTop = 0;
-}
-function loadAccounts(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    const newTokens = ev.target.result.split('\n').filter(l => l.trim());
-    // Mevcut listeye ekle (duplicate olmayanları)
-    const existing = new Set(tokens);
-    for (const t of newTokens) {
-      if (!existing.has(t)) { tokens.push(t); existing.add(t); }
-    }
-    totalLoaded = tokens.length;
-    updateAccountUI();
-    checkReady();
-    // Backend'e kaydet (append=true)
-    await fetch('/api/accounts', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ tokens: newTokens, append: true })
-    });
-  };
-  reader.readAsText(file);
-}
-
-function updateAccountUI() {
-  const n = tokens.length;
-  document.getElementById('accountNum').textContent = n;
-  document.getElementById('accountLabel').textContent = n > 0 ? 'hesap hazır' : 'Hesap bitti!';
-  document.getElementById('accountBar').style.width = Math.min(100, (n / Math.max(totalLoaded, 1)) * 100) + '%';
-  document.getElementById('badgeDot').className = 'badge-dot' + (n > 0 ? '' : ' gray');
-  document.getElementById('badgeText').textContent = n > 0 ? `${n} hesap` : 'hesap bitti';
-}
-
-function removeFirstToken() {
-  tokens.shift();
-  updateAccountUI();
-  // NO auto-download — sadece bellekten düşülür
-}
-
-/* ── IMAGE ── */
-const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
-
-async function compressToUnder5MB(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Try progressively lower quality until under 5MB
-        const qualities = [0.97, 0.94, 0.90, 0.86, 0.82, 0.78, 0.74, 0.70];
-        let result = null;
-
-        for (const q of qualities) {
-          const dataUrl = canvas.toDataURL('image/jpeg', q);
-          // base64 → actual byte count
-          const base64Data = dataUrl.split(',')[1];
-          const byteLen = Math.ceil(base64Data.length * 3 / 4);
-          if (byteLen <= MAX_FILE_BYTES) {
-            result = { dataUrl, quality: q, resized: false };
-            break;
-          }
-        }
-
-        // Still > 5MB? Scale dimensions down until it fits
-        if (!result) {
-          let scale = 0.9;
-          while (scale >= 0.3) {
-            const w2 = Math.round(width * scale);
-            const h2 = Math.round(height * scale);
-            canvas.width = w2; canvas.height = h2;
-            ctx.clearRect(0, 0, w2, h2);
-            ctx.drawImage(img, 0, 0, w2, h2);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            const byteLen = Math.ceil(dataUrl.split(',')[1].length * 3 / 4);
-            if (byteLen <= MAX_FILE_BYTES) {
-              result = { dataUrl, quality: 0.92, resized: true, scale };
-              break;
+def save_to_disk():
+    try:
+        with state_lock:
+            to_save = {
+                'tokens':       state['tokens'],
+                'total_loaded': state['total_loaded'],
+                'history':      state['history'],
+                'favorites':    state['favorites'],
+                'jobs': {
+                    jid: j for jid, j in state['jobs'].items()
+                    if j.get('status') in ('success', 'error')
+                }
             }
-            scale -= 0.1;
-          }
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(to_save, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f'[SAVE] Hata: {e}')
+
+load_from_disk()
+
+# ── AUTH ─────────────────────────────────────────────────────────────────────
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logged_in'):
+            return jsonify({'error': 'Yetkisiz erişim', 'auth': False}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json(force=True)
+    if data.get('password') == ADMIN_PASSWORD:
+        session['logged_in'] = True
+        session.permanent = True
+        return jsonify({'ok': True})
+    return jsonify({'ok': False, 'error': 'Şifre hatalı'}), 401
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.clear()
+    return jsonify({'ok': True})
+
+@app.route('/api/auth-check', methods=['GET'])
+def auth_check():
+    return jsonify({'logged_in': bool(session.get('logged_in'))})
+
+# ── YARDIMCI ─────────────────────────────────────────────────────────────────
+def update_job(job_id, **kwargs):
+    with state_lock:
+        if job_id in state['jobs']:
+            state['jobs'][job_id].update(kwargs)
+
+# ── ROUTES ───────────────────────────────────────────────────────────────────
+
+@app.route('/')
+def index():
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
+
+# ── STATE ──
+@app.route('/api/state', methods=['GET'])
+@login_required
+def get_state():
+    with state_lock:
+        return jsonify({
+            'tokens':       state['tokens'],
+            'total_loaded': state['total_loaded'],
+            'jobs':         state['jobs'],
+            'history':      state['history'],
+            'favorites':    state['favorites'],
+        })
+
+# ── FAVORITES ──
+@app.route('/api/favorites', methods=['GET'])
+@login_required
+def get_favorites():
+    with state_lock:
+        return jsonify(state['favorites'])
+
+@app.route('/api/favorites', methods=['POST'])
+@login_required
+def add_favorite():
+    item = request.get_json(force=True)
+    with state_lock:
+        if not any(f['videoUrl'] == item['videoUrl'] for f in state['favorites']):
+            state['favorites'].insert(0, item)
+            if len(state['favorites']) > 100:
+                state['favorites'] = state['favorites'][:100]
+    save_to_disk()
+    return jsonify({'ok': True})
+
+@app.route('/api/favorites/<int:idx>', methods=['DELETE'])
+@login_required
+def delete_favorite(idx):
+    with state_lock:
+        if 0 <= idx < len(state['favorites']):
+            state['favorites'].pop(idx)
+    save_to_disk()
+    return jsonify({'ok': True})
+
+@app.route('/api/favorites', methods=['DELETE'])
+@login_required
+def clear_favorites():
+    with state_lock:
+        state['favorites'] = []
+    save_to_disk()
+    return jsonify({'ok': True})
+
+# ── ACCOUNTS ──
+@app.route('/api/accounts', methods=['POST'])
+@login_required
+def set_accounts():
+    data       = request.get_json(force=True)
+    new_tokens = [t for t in data.get('tokens', []) if t.strip()]
+    append     = data.get('append', False)
+    with state_lock:
+        if append:
+            existing_set = set(state['tokens'])
+            for t in new_tokens:
+                if t not in existing_set:
+                    state['tokens'].append(t)
+                    existing_set.add(t)
+        else:
+            state['tokens'] = new_tokens
+        state['total_loaded'] = len(state['tokens'])
+        count = len(state['tokens'])
+    save_to_disk()
+    return jsonify({'ok': True, 'count': count})
+
+@app.route('/api/accounts', methods=['DELETE'])
+@login_required
+def clear_accounts():
+    with state_lock:
+        state['tokens']       = []
+        state['total_loaded'] = 0
+    save_to_disk()
+    return jsonify({'ok': True})
+
+# ── HISTORY ──
+@app.route('/api/history', methods=['GET'])
+@login_required
+def get_history():
+    with state_lock:
+        return jsonify(state['history'])
+
+@app.route('/api/history', methods=['POST'])
+@login_required
+def add_history():
+    item = request.get_json(force=True)
+    with state_lock:
+        state['history'].insert(0, item)
+        if len(state['history']) > 50:
+            state['history'] = state['history'][:50]
+    save_to_disk()
+    return jsonify({'ok': True})
+
+@app.route('/api/history/<int:idx>', methods=['DELETE'])
+@login_required
+def delete_history_item(idx):
+    with state_lock:
+        if 0 <= idx < len(state['history']):
+            state['history'].pop(idx)
+    save_to_disk()
+    return jsonify({'ok': True})
+
+@app.route('/api/history', methods=['DELETE'])
+@login_required
+def clear_history():
+    with state_lock:
+        state['history'] = []
+    save_to_disk()
+    return jsonify({'ok': True})
+
+# ── JOBS ──
+@app.route('/api/jobs', methods=['GET'])
+@login_required
+def get_jobs():
+    with state_lock:
+        return jsonify(state['jobs'])
+
+@app.route('/api/jobs/<job_id>', methods=['GET'])
+@login_required
+def get_job(job_id):
+    with state_lock:
+        job = state['jobs'].get(job_id)
+    if not job:
+        return jsonify({'error': 'Bulunamadı'}), 404
+    return jsonify(job)
+
+@app.route('/api/jobs/<job_id>', methods=['DELETE'])
+@login_required
+def delete_job(job_id):
+    with state_lock:
+        state['jobs'].pop(job_id, None)
+    save_to_disk()
+    return jsonify({'ok': True})
+
+@app.route('/api/jobs', methods=['DELETE'])
+@login_required
+def clear_finished_jobs():
+    """Sadece tamamlanan / hata veren job'ları sil (aktif olanlar korunur)."""
+    with state_lock:
+        state['jobs'] = {
+            jid: j for jid, j in state['jobs'].items()
+            if j.get('status') == 'running'
+        }
+    save_to_disk()
+    return jsonify({'ok': True})
+
+# ── GENERATE ──
+@app.route('/api/generate', methods=['POST'])
+@login_required
+def generate():
+    data         = request.get_json(force=True)
+    image_data   = data.get('imageBase64', '')
+    image_name   = data.get('imageName', 'image.jpg')
+    prompt       = data.get('prompt', '').strip()
+    model_id     = str(data.get('model_id', '17'))
+    duration     = str(data.get('duration', '10'))
+    voice        = bool(data.get('voice', False))
+    audio_type   = int(data.get('audio_type', 0))
+
+    if not image_data or not prompt:
+        return jsonify({'error': 'Eksik parametre'}), 400
+
+    with state_lock:
+        if not state['tokens']:
+            return jsonify({'error': 'Hesap listesi boş. accounts.txt yükleyin.'}), 400
+        token_line = state['tokens'][0]
+        parts      = token_line.split(':')
+        token      = parts[2].strip() if len(parts) > 2 else token_line.strip()
+        state['tokens'].pop(0)
+
+    save_to_disk()
+
+    job_id = str(int(time.time() * 1000))
+
+    with state_lock:
+        state['jobs'][job_id] = {
+            'id':        job_id,
+            'prompt':    prompt,
+            'model_id':  model_id,
+            'duration':  duration,
+            'voice':     voice,
+            'status':    'running',
+            'step':      'Başlatılıyor...',
+            'stepIndex': -1,
+            'videoUrl':  None,
+            'error':     None,
+            'createdAt': datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
         }
 
-        if (!result) return reject(new Error('Görüntü 5MB altına sıkıştırılamadı.'));
-        resolve(result);
-      };
-      img.onerror = reject;
-      img.src = ev.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function setImageUI(dataUrl, label, compressed) {
-  imageBase64 = dataUrl;
-  document.getElementById('imgPreview').src = dataUrl;
-  document.getElementById('imgPreview').style.display = 'block';
-  document.getElementById('imgPlaceholder').style.display = 'none';
-  // Show compression badge if applied
-  const nameEl = document.getElementById('imgName');
-  nameEl.textContent = label + (compressed ? ' ⚡ sıkıştırıldı' : '');
-  nameEl.style.display = 'block';
-  document.getElementById('imageZone').classList.add('loaded');
-  checkReady();
-}
-
-function loadImage(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  if (file.size <= MAX_FILE_BYTES) {
-    // No compression needed
-    imageFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => setImageUI(ev.target.result, file.name, false);
-    reader.readAsDataURL(file);
-  } else {
-    // Need to compress — show loading state
-    const nameEl = document.getElementById('imgName');
-    nameEl.textContent = '⏳ Sıkıştırılıyor...';
-    nameEl.style.display = 'block';
-
-    compressToUnder5MB(file).then(({ dataUrl, quality, resized, scale }) => {
-      // Create a synthetic File from the compressed dataUrl for the raw upload step
-      const byteStr = atob(dataUrl.split(',')[1]);
-      const ab = new ArrayBuffer(byteStr.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-      const compressedBlob = new Blob([ab], { type: 'image/jpeg' });
-      const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
-      imageFile = new File([compressedBlob], newName, { type: 'image/jpeg' });
-      const origMB = (file.size / 1024 / 1024).toFixed(1);
-      const newMB  = (compressedBlob.size / 1024 / 1024).toFixed(1);
-      const label  = `${newName} (${origMB}MB → ${newMB}MB, q=${Math.round(quality*100)}%${resized ? ` @${Math.round(scale*100)}%` : ''})`;
-      setImageUI(dataUrl, label, true);
-    }).catch(err => {
-      alert('Sıkıştırma hatası: ' + err.message);
-    });
-  }
-}
-
-const zone = document.getElementById('imageZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('drag');
-  const f = e.dataTransfer.files[0];
-  if (f?.type.startsWith('image/')) loadImage({ target: { files: [f] } });
-});
-
-function checkReady() {
-  const ok = tokens.length > 0 && imageFile !== null && document.getElementById('prompt').value.trim().length > 0;
-  document.getElementById('submitBtn').disabled = !ok;
-}
-
-function updateChar() {
-  document.getElementById('charCount').textContent = document.getElementById('prompt').value.length + '/500';
-  checkReady();
-}
-
-/* ── JOB CARDS ── */
-function createJobCard(jobId, prompt) {
-  if (document.getElementById('job-' + jobId)) return; // zaten var
-
-  outputCardCount++;
-  document.getElementById('outputCount').textContent = outputCardCount;
-
-  const div = document.createElement('div');
-  div.setAttribute('data-job', jobId);
-  div.id = 'job-' + jobId;
-
-  // En başa ekle (en yeni üstte)
-  const area = document.getElementById('statusArea');
-  const firstCard = area.querySelector('[data-job]');
-  if (firstCard) area.insertBefore(div, firstCard);
-  else area.appendChild(div);
-
-  // outputJobOrder'a ekle (en yeni = index 0)
-  if (!outputJobOrder.includes(jobId)) outputJobOrder.unshift(jobId);
-
-  switchTab('output');
-  applyOutputPagination();
-  return div;
-}
-
-function renderSteps(jobId, activeStep) {
-  const el = document.getElementById('job-' + jobId);
-  if (!el) return;
-  const idx = STEPS.indexOf(activeStep);
-  const items = STEPS.map((s, i) => {
-    const cls = i < idx ? 'done' : i === idx ? 'active' : '';
-    return `<div class="step-item ${cls}"><div class="step-dot"></div>${s}</div>`;
-  }).join('');
-  el.innerHTML = `
-    <div class="status-card">
-      <div class="status-header">
-        <div class="spinner"></div>
-        <div>
-          <div class="status-title">Video oluşturuluyor <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span></div>
-          <div class="status-step">${activeStep}</div>
-        </div>
-      </div>
-      <div class="steps-list">${items}</div>
-    </div>`;
-}
-
-function renderSuccess(jobId, videoUrl, prompt, modelId, duration) {
-  const el = document.getElementById('job-' + jobId);
-  if (!el) return;
-  const isFav = favoritesData.some(f => f.videoUrl === videoUrl);
-  const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-  const model = getModel(modelId || '17');
-  const dur   = duration || '?';
-  el.innerHTML = `
-    <div class="success-card">
-      <div class="success-header">
-        <div class="success-icon">✓</div>
-        <div style="flex:1;min-width:0">
-          <div class="success-title" style="display:flex;align-items:center;gap:8px">
-            Video hazır!
-            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span>
-            <span class="model-badge green" style="font-size:9px">${model.name} · ${dur}sn</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-            <div class="success-sub" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapedPrompt}">${prompt}</div>
-            <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${escapedPrompt}')">📋</button>
-          </div>
-        </div>
-      </div>
-      <video class="video-player" controls autoplay loop muted>
-        <source src="${videoUrl}" type="video/mp4">
-      </video>
-      <div class="video-actions">
-        <a class="btn-sm btn-green" href="${videoUrl}" download>⬇ İndir</a>
-        <button class="btn-sm btn-outline" onclick="copyUrl('${videoUrl}')">🔗 URL Kopyala</button>
-        <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" id="fav-out-${jobId}" onclick="toggleFavFromOutput('${videoUrl}','${escapedPrompt}','fav-out-${jobId}')">♥ ${isFav ? 'Favoride' : 'Favori'}</button>
-        <button class="btn-sm btn-danger" onclick="removeCard('job-${jobId}')">🗑 Kaldır</button>
-      </div>
-    </div>`;
-  addHistory(videoUrl, prompt);
-}
-
-function renderError(jobId, msg) {
-  const el = document.getElementById('job-' + jobId);
-  if (!el) return;
-  el.innerHTML = `
-    <div class="error-card">
-      <div class="error-icon">⚠️</div>
-      <div>
-        <div class="error-title">Hata <span style="font-family:'DM Mono',monospace;font-size:11px">#${jobId}</span></div>
-        <div class="error-msg">${msg}</div>
-        <div style="margin-top:8px"><button class="btn-sm btn-danger" onclick="removeCard('job-${jobId}')" style="font-size:11px">🗑 Kaldır</button></div>
-      </div>
-    </div>`;
-}
-
-function removeCard(cardId) {
-  const el = document.getElementById(cardId);
-  if (el) {
-    const jobId = cardId.replace('job-', '');
-    fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
-    el.remove();
-    outputCardCount = Math.max(0, outputCardCount - 1);
-    document.getElementById('outputCount').textContent = outputCardCount;
-    outputJobOrder = outputJobOrder.filter(id => id !== jobId);
-    applyOutputPagination();
-  }
-}
-
-/* ── GENERATE ── */
-async function generate() {
-  const prompt = document.getElementById('prompt').value.trim();
-  if (!prompt || !imageFile || tokens.length === 0) return;
-
-  document.getElementById('submitBtn').disabled = true;
-
-  const model      = getModel(selectedModelId);
-  const audio_type = (model.voice && voiceEnabled) ? model.audio_type_on : 0;
-
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        imageBase64: imageBase64,
-        imageName:   imageFile.name,
-        prompt:      prompt,
-        model_id:    selectedModelId,
-        duration:    selectedDuration,
-        voice:       model.voice && voiceEnabled,
-        audio_type:  audio_type,
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || 'Sunucu hatası');
-      return;
-    }
-
-    const { jobId } = await res.json();
-
-    // Backend token tüketti, frontend'deki listeyi de senkronize et
-    removeFirstToken();
-    checkReady();
-
-    // Kart oluştur (polling halledecek adım güncellemelerini)
-    createJobCard(jobId, prompt);
-    renderSteps(jobId, STEPS[0]);
-    switchTab('output');
-
-  } catch (err) {
-    alert('İstek hatası: ' + err.message);
-  } finally {
-    checkReady();
-  }
-}
-
-/* ── JOB POLLING (2sn'de bir backend'den state al) ── */
-async function pollJobs() {
-  try {
-    const res  = await fetch('/api/jobs');
-    if (res.status === 401) {
-      document.getElementById('loginOverlay').classList.remove('hidden');
-      return;
-    }
-    const jobs = await res.json();
-
-    for (const [jobId, job] of Object.entries(jobs)) {
-      const existing = document.getElementById('job-' + jobId);
-
-      // Sayfa refresh'te yeni gelen job'lar için kart oluştur
-      if (!existing) {
-        createJobCard(jobId, job.prompt);
-        // Eğer çalışıyorsa adım göster; bitmiş/hatalıysa doğrudan final render
-      }
-
-      const prev = knownJobStates[jobId];
-
-      if (job.status === 'running') {
-        // Her poll'da adımı güncelle
-        renderSteps(jobId, job.step);
-      } else if (job.status === 'success' && prev !== 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
-      } else if (job.status === 'error' && prev !== 'error') {
-        renderError(jobId, job.error);
-      }
-
-      knownJobStates[jobId] = job.status;
-    }
-
-    // Geçmişi de senkronize et
-    const histRes  = await fetch('/api/history');
-    const histJson = await histRes.json();
-    if (JSON.stringify(histJson) !== JSON.stringify(historyData)) {
-      historyData = histJson;
-      renderHistory();
-    }
-
-    // Favorileri senkronize et
-    const favRes  = await fetch('/api/favorites');
-    const favJson = await favRes.json();
-    if (JSON.stringify(favJson) !== JSON.stringify(favoritesData)) {
-      favoritesData = favJson;
-      renderFavorites();
-      renderHistory(); // kalp ikonlarını güncelle
-    }
-
-    // Hesap sayısını backend ile senkronize et
-    const stRes  = await fetch('/api/state');
-    const st     = await stRes.json();
-    if (st.tokens.length !== tokens.length) {
-      tokens       = st.tokens;
-      totalLoaded  = st.total_loaded;
-      updateAccountUI();
-      checkReady();
-    }
-
-  } catch (_) { /* ağ hatası — sessizce geç */ }
-}
-
-setInterval(pollJobs, 2000);
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function copyUrl(url) {
-  navigator.clipboard.writeText(url);
-  const btn = event.target;
-  const orig = btn.textContent;
-  btn.textContent = '✓ Kopyalandı';
-  setTimeout(() => btn.textContent = orig, 1500);
-}
-
-/* ── HISTORY ── */
-function addHistory(videoUrl, prompt) {
-  // Artık server-side otomatik yapılıyor. Bu fonksiyon geriye dönük uyumluluk için korunur.
-  const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR') };
-  historyData.unshift(item);
-  if (historyData.length > 50) historyData = historyData.slice(0, 50);
-  renderHistory();
-}
-
-function deleteHistoryItem(idx) {
-  fetch(`/api/history/${idx}`, { method: 'DELETE' });
-  historyData.splice(idx, 1);
-  renderHistory();
-}
-
-/* ── FAVORITES ── */
-let favoritesData = [];
-
-function renderFavorites() {
-  const list  = document.getElementById('favoritesList');
-  const empty = document.getElementById('emptyFavorites');
-  const total = favoritesData.length;
-  document.getElementById('favCount').textContent = total;
-
-  if (!total) {
-    empty.style.display = 'flex';
-    list.innerHTML = '';
-    document.getElementById('pgFavorites').style.display = 'none';
-    return;
-  }
-
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (favPage > pages) favPage = pages;
-  const start = (favPage - 1) * PAGE_SIZE;
-  const pageItems = favoritesData.slice(start, start + PAGE_SIZE);
-
-  empty.style.display = 'none';
-  list.innerHTML = pageItems.map((item, relIdx) => {
-    const idx = start + relIdx;
-    const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-    <div class="history-card">
-      <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
-        <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
-          <source src="${item.videoUrl}" type="video/mp4">
-        </video>
-      </div>
-      <div class="history-card-info">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="history-card-prompt" style="flex:1" title="${esc}">${item.prompt || ''}</div>
-          <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${esc}')">📋</button>
-        </div>
-        <div class="history-card-time">${item.time}</div>
-        <div class="history-card-actions">
-          <a class="btn-sm btn-green" href="${item.videoUrl}" download style="font-size:11px;padding:5px 10px">⬇ İndir</a>
-          <button class="btn-sm btn-outline" onclick="copyUrl('${item.videoUrl}')" style="font-size:11px;padding:5px 10px">🔗 URL</button>
-          <button class="btn-sm btn-fav active" style="font-size:11px;padding:5px 10px" onclick="removeFavoriteByIdx(${idx})">♥ Çıkar</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Pagination bar
-  const pg = document.getElementById('pgFavorites');
-  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
-  document.getElementById('pgFavInfo').textContent = `${favPage} / ${pages}`;
-  document.getElementById('pgFavPrev').disabled = favPage <= 1;
-  document.getElementById('pgFavNext').disabled = favPage >= pages;
-}
-
-function changeFavPage(dir) {
-  favPage += dir;
-  renderFavorites();
-  document.getElementById('favArea').scrollTop = 0;
-}
-
-function toggleFavFromHistory(histIdx, btnId) {
-  const item = historyData[histIdx];
-  if (!item) return;
-  const favIdx = favoritesData.findIndex(f => f.videoUrl === item.videoUrl);
-  if (favIdx >= 0) {
-    removeFavoriteByIdx(favIdx);
-    const btn = document.getElementById(btnId);
-    if (btn) btn.classList.remove('active');
-  } else {
-    addFavorite(item);
-    const btn = document.getElementById(btnId);
-    if (btn) btn.classList.add('active');
-  }
-}
-
-function toggleFavFromOutput(videoUrl, prompt, btnId) {
-  const favIdx = favoritesData.findIndex(f => f.videoUrl === videoUrl);
-  const btn = document.getElementById(btnId);
-  if (favIdx >= 0) {
-    removeFavoriteByIdx(favIdx);
-    if (btn) { btn.classList.remove('active'); btn.textContent = '♥ Favori'; }
-  } else {
-    const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR') };
-    addFavorite(item);
-    if (btn) { btn.classList.add('active'); btn.textContent = '♥ Favoride'; }
-  }
-}
-
-function addFavorite(item) {
-  if (favoritesData.some(f => f.videoUrl === item.videoUrl)) return;
-  favoritesData.unshift(item);
-  fetch('/api/favorites', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(item)
-  });
-  renderFavorites();
-}
-
-function removeFavoriteByIdx(idx) {
-  fetch(`/api/favorites/${idx}`, { method: 'DELETE' });
-  favoritesData.splice(idx, 1);
-  renderFavorites();
-  renderHistory();
-}
-
-function clearFavorites() {
-  if (!favoritesData.length) return;
-  if (!confirm('Tüm favoriler silinsin mi?')) return;
-  fetch('/api/favorites', { method: 'DELETE' });
-  favoritesData = [];
-  favPage = 1;
-  renderFavorites();
-  renderHistory();
-}
-
-function copyPrompt(btn, prompt) {
-  const decoded = prompt.replace(/&quot;/g, '"');
-  navigator.clipboard.writeText(decoded);
-  const orig = btn.textContent;
-  btn.textContent = '✓';
-  btn.style.color = 'var(--accent)';
-  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
-}
-
-function renderHistory() {
-  const list  = document.getElementById('historyList');
-  const empty = document.getElementById('emptyHistory');
-  const total = historyData.length;
-  document.getElementById('historyCount').textContent = total;
-
-  if (!total) {
-    empty.style.display = 'flex';
-    list.innerHTML = '';
-    document.getElementById('pgHistory').style.display = 'none';
-    return;
-  }
-
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (historyPage > pages) historyPage = pages;
-  const start = (historyPage - 1) * PAGE_SIZE;
-  const pageItems = historyData.slice(start, start + PAGE_SIZE);
-
-  empty.style.display = 'none';
-  list.innerHTML = pageItems.map((item, relIdx) => {
-    const idx = start + relIdx;
-    const isFav = favoritesData.some(f => f.videoUrl === item.videoUrl);
-    const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-    <div class="history-card">
-      <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
-        <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
-          <source src="${item.videoUrl}" type="video/mp4">
-        </video>
-      </div>
-      <div class="history-card-info">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="history-card-prompt" style="flex:1" title="${esc}">${item.prompt || ''}</div>
-          <button class="btn-copy-prompt" title="Promptu kopyala" onclick="copyPrompt(this,'${esc}')">📋</button>
-        </div>
-        <div class="history-card-time">${item.time}</div>
-        <div class="history-card-actions">
-          <a class="btn-sm btn-green" href="${item.videoUrl}" download style="font-size:11px;padding:5px 10px">⬇ İndir</a>
-          <button class="btn-sm btn-outline" onclick="copyUrl('${item.videoUrl}')" style="font-size:11px;padding:5px 10px">🔗 URL</button>
-          <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" style="font-size:11px;padding:5px 10px" id="fav-h-${idx}" onclick="toggleFavFromHistory(${idx},'fav-h-${idx}')">♥</button>
-          <button class="btn-sm btn-danger" onclick="deleteHistoryItem(${idx})" style="font-size:11px;padding:5px 10px">🗑</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Pagination bar
-  const pg = document.getElementById('pgHistory');
-  pg.style.display = total > PAGE_SIZE ? 'flex' : 'none';
-  document.getElementById('pgHistInfo').textContent = `${historyPage} / ${pages}`;
-  document.getElementById('pgHistPrev').disabled = historyPage <= 1;
-  document.getElementById('pgHistNext').disabled = historyPage >= pages;
-}
-
-function changeHistoryPage(dir) {
-  historyPage += dir;
-  renderHistory();
-  document.getElementById('historyArea').scrollTop = 0;
-}
-
-/* ── INIT: Backend'den state yükle ── */
-async function initState() {
-  try {
-    const res = await fetch('/api/state');
-    if (res.status === 401) {
-      document.getElementById('loginOverlay').classList.remove('hidden');
-      return;
-    }
-    const st = await res.json();
-
-    // Hesaplar
-    tokens      = st.tokens      || [];
-    totalLoaded = st.total_loaded || 0;
-    updateAccountUI();
-
-    // Favoriler (geçmişten önce — renderHistory favoritesData'ya bakar)
-    favoritesData = st.favorites || [];
-    renderFavorites();
-
-    // Geçmiş
-    historyData = st.history || [];
-    renderHistory();
-
-    // Job'lar — kartları oluştur, outputJobOrder'ı sorted by id (desc) yeniden kur
-    const jobs = st.jobs || {};
-    const sortedJobIds = Object.keys(jobs).sort((a, b) => Number(b) - Number(a));
-
-    for (const jobId of sortedJobIds) {
-      const job = jobs[jobId];
-      createJobCard(jobId, job.prompt);
-      if (job.status === 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
-        knownJobStates[jobId] = 'success';
-      } else if (job.status === 'error') {
-        renderError(jobId, job.error);
-        knownJobStates[jobId] = 'error';
-      } else {
-        renderSteps(jobId, job.step || STEPS[0]);
-        knownJobStates[jobId] = 'running';
-      }
-    }
-
-    checkReady();
-  } catch (e) {
-    console.warn('State yüklenemedi, sıfırdan başlıyoruz.', e);
-    renderHistory();
-    renderFavorites();
-  }
-}
-
-// Auth kontrolü — sayfa yüklenince login gerekiyor mu?
-(async () => {
-  try {
-    const res = await fetch('/api/auth-check');
-    const data = await res.json();
-    if (data.logged_in) {
-      document.getElementById('loginOverlay').classList.add('hidden');
-      renderModelGrid();
-      renderDurationRow();
-      renderVoiceRow();
-      updateSummary();
-      initState();
-    } else {
-      document.getElementById('loginOverlay').classList.remove('hidden');
-    }
-  } catch {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-  }
-})();
-</script>
-</body>
-</html>
+    t = threading.Thread(
+        target=run_generation,
+        args=(job_id, token, image_data, image_name, prompt, model_id, duration, voice, audio_type),
+        daemon=True
+    )
+    t.start()
+
+    return jsonify({'jobId': job_id})
+
+
+# ── ARKA PLANDA ÇALIŞAN ÜRETİM DÖNGÜSÜ ──────────────────────────────────────
+STEPS = [
+    'Signed URL alınıyor...',
+    'Resim yükleniyor (base64)...',
+    'Resim yükleniyor (raw)...',
+    'Materyal oluşturuluyor...',
+    'Görev kuyruğa alınıyor...',
+    'Video bekleniyor...'
+]
+
+def run_generation(job_id, token, image_data_url, image_name, prompt,
+                   model_id='17', duration='10', voice=False, audio_type=0):
+    try:
+        # Base64 verisini ayır
+        if ',' in image_data_url:
+            b64_data = image_data_url.split(',')[1]
+        else:
+            b64_data = image_data_url
+
+        file_ext = image_name.split('.')[-1].lower()
+        if file_ext not in ('jpg', 'jpeg', 'png', 'webp', 'gif'):
+            file_ext = 'jpeg'
+
+        # ── ADIM 0: Signed URL ──────────────────────────────────────────────
+        update_job(job_id, step=STEPS[0], stepIndex=0)
+        print(f'[{job_id}] Adım 0: Signed URL alınıyor...')
+
+        sign_res = requests.get(
+            f'{BASE}/api/v1/common/upload/signed-url',
+            params={'filename': image_name},
+            headers=clipfly_headers(token),
+            timeout=30
+        )
+        sign_json = sign_res.json()
+        if sign_json.get('code') and sign_json['code'] != 200:
+            raise Exception(
+                f"Token geçersiz veya süresi dolmuş ({sign_json.get('message')}). "
+                "Lütfen accounts.txt dosyasını yeniden yükleyin."
+            )
+        signing = sign_json.get('data', '')
+        if not isinstance(signing, str) or '.com' not in signing:
+            raise Exception('Signed URL alınamadı: ' + json.dumps(signing))
+
+        # ── ADIM 1: Base64 upload ────────────────────────────────────────────
+        update_job(job_id, step=STEPS[1], stepIndex=1)
+        print(f'[{job_id}] Adım 1: Base64 yükleniyor...')
+
+        b64_res = requests.post(
+            f'{BASE}/api/v1/common/upload/base64',
+            headers=clipfly_headers(token),
+            json={
+                'content':          image_data_url,   # tam data URL
+                'file_type':        'image',
+                'is_original_name': 0,
+                'name':             image_name,
+                'prefix_path':      '/uploads'
+            },
+            timeout=60
+        )
+        source_path = b64_res.json()['data']['url']
+
+        # ── ADIM 2: Raw (binary) S3 upload ──────────────────────────────────
+        update_job(job_id, step=STEPS[2], stepIndex=2)
+        print(f'[{job_id}] Adım 2: S3\'e raw yükleniyor...')
+
+        image_bytes = base64.b64decode(b64_data)
+        requests.put(
+            signing,          # tam S3 URL
+            data=image_bytes,
+            headers={
+                'content-type': f'image/{file_ext}',
+                'origin':       BASE,
+                'referer':      BASE + '/aitools/ai-video-generator-v2',
+                'user-agent':   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+            },
+            timeout=120
+        )
+
+        # ── ADIM 3: Materyal oluştur ─────────────────────────────────────────
+        update_job(job_id, step=STEPS[3], stepIndex=3)
+        print(f'[{job_id}] Adım 3: Materyal oluşturuluyor...')
+
+        mat_res = requests.post(
+            f'{BASE}/api/v1/user/materials/create',
+            headers=clipfly_headers(token, {'x-country': 'TR'}),
+            json={
+                'is_ai': -1,
+                'name':  image_name,
+                'type':  'image',
+                'attrs': {},
+                'urls': {
+                    'thumb': source_path.replace(
+                        'https://video-clipfly-west2.s3.us-west-2.amazonaws.com', ''
+                    ),
+                    'url': signing.split('?')[0].split('.com')[1]
+                }
+            },
+            timeout=30
+        )
+        material_id = mat_res.json()['data']['id']
+
+        # ── ADIM 4: Görev kuyruğa al ─────────────────────────────────────────
+        update_job(job_id, step=STEPS[4], stepIndex=4)
+        print(f'[{job_id}] Adım 4: Görev kuyruğa alınıyor...')
+
+        source_image = signing.split('?')[0].split('.com')[1]
+        task_res = requests.post(
+            f'{BASE}/api/v1/user/ai-task-queues',
+            headers=clipfly_headers(token),
+            json={
+                'type': 17,
+                'attrs': [{
+                    'enhance':         False,
+                    'prompt':          prompt,
+                    'camera_control':  'auto',
+                    'from':            'image',
+                    'imageFrom':       'cloud',
+                    'is_scale':        0,
+                    'materialId':      str(material_id),
+                    'negative_prompt': '',
+                    'voice':           voice,
+                    'model_id':        model_id,
+                    'biz_type':        17,
+                    'duration':        duration,
+                    'audio_type':      audio_type,
+                    'camerafixed':     False,
+                    'source_image':    source_image,
+                    'urls':            {'url': source_image}
+                }]
+            },
+            timeout=30
+        )
+        if not task_res.ok:
+            raise Exception('Görev oluşturulamadı: ' + json.dumps(task_res.json()))
+
+        task_json = task_res.json()
+        # Task ID'yi yakala — parallel job'lar birbirinin sonucunu almasın
+        task_id = None
+        try:
+            task_id = str(task_json['data']['id'])
+        except (KeyError, TypeError):
+            pass
+        print(f'[{job_id}] Görev kuyruğa alındı. task_id={task_id}')
+
+        # ── ADIM 5: Video URL bekle ──────────────────────────────────────────
+        update_job(job_id, step=STEPS[5], stepIndex=5)
+        print(f'[{job_id}] Adım 5: Video bekleniyor...')
+
+        poll_url = (
+            f'{BASE}/api/v1/user/ai-tasks/video-generate-list'
+            '?page=1&page_size=10&paranoid=1&task_type=7&version=1.0&clear=true'
+        )
+
+        video_url = None
+        for i in range(300):
+            time.sleep(2)
+            poll_res  = requests.get(poll_url, headers=clipfly_headers(token), timeout=30)
+            poll_data = poll_res.json()
+            try:
+                groups = poll_data.get('data', [])
+                found  = None
+                if task_id:
+                    # ID'ye göre ara — tüm grup ve task'lara bak
+                    for group in groups:
+                        for task in (group.get('tasks') or []):
+                            if str(task.get('id')) == task_id or str(task.get('queue_id')) == task_id:
+                                found = task
+                                break
+                        if found:
+                            break
+                    # Bulunamadıysa ilk task'ı dene (fallback)
+                    if not found and groups:
+                        found = groups[0]['tasks'][0]
+                else:
+                    found = groups[0]['tasks'][0]
+
+                if found:
+                    url = found['after_material']['urls']['url']
+                    if url:
+                        video_url = BASE + url
+                        break
+            except (KeyError, IndexError, TypeError):
+                pass
+
+        if not video_url:
+            raise Exception('Video URL alınamadı — zaman aşımı (10 dk)')
+
+        print(f'[{job_id}] ✓ Video hazır: {video_url}')
+        update_job(job_id, status='success', videoUrl=video_url, step='Tamamlandı', stepIndex=6)
+
+        # Geçmişe ekle
+        history_item = {
+            'videoUrl': video_url,
+            'prompt':   prompt,
+            'time':     datetime.now().strftime('%d.%m.%Y %H:%M')
+        }
+        with state_lock:
+            state['history'].insert(0, history_item)
+            if len(state['history']) > 50:
+                state['history'] = state['history'][:50]
+        save_to_disk()
+
+    except Exception as e:
+        print(f'[{job_id}] ✗ Hata: {e}')
+        update_job(job_id, status='error', error=str(e), step='Hata')
+        save_to_disk()
+
+
+if __name__ == '__main__':
+    print('ClipFly Auto başlatılıyor → http://localhost:5000')
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
