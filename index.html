@@ -831,6 +831,35 @@
     .left-scroll { overflow: visible; }
     .right-panel { min-height: 400px; }
     .right-scroll { overflow: visible; }
+
+    /* Tab bar yatay scroll */
+    .tab-bar {
+      padding: 0 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      justify-content: flex-start;
+      gap: 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-left {
+      flex-shrink: 0;
+      gap: 0;
+    }
+
+    .tab-btn {
+      padding: 12px 12px;
+      font-size: 11px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tab-clear-btn {
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
   }
 </style>
 </head>
