@@ -946,6 +946,16 @@
     </div>
 
     <div class="left-footer">
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button id="modeVideo" onclick="setMode('video')"
+          style="flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s">
+          🎬 Video
+        </button>
+        <button id="modeImage" onclick="setMode('image')"
+          style="flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text-muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s">
+          🖼️ Görsel
+        </button>
+      </div>
       <button class="btn-primary" id="submitBtn" onclick="generate()" disabled>
         <span>⚡</span>
         <span id="btnText">Video Oluştur</span>
@@ -1089,6 +1099,22 @@ let imageFile = null;
 let imageBase64 = null;
 let historyData = [];
 let outputCardCount = 0;
+let currentMode = 'video'; // 'video' | 'image'
+
+function setMode(mode) {
+  currentMode = mode;
+  const btnV = document.getElementById('modeVideo');
+  const btnI = document.getElementById('modeImage');
+  if (mode === 'video') {
+    btnV.style.cssText = 'flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:#000;font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s';
+    btnI.style.cssText = 'flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text-muted);font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s';
+    document.getElementById('btnText').textContent = 'Video Oluştur';
+  } else {
+    btnI.style.cssText = 'flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:#000;font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s';
+    btnV.style.cssText = 'flex:1;padding:7px 0;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text-muted);font-family:\'Syne\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s';
+    document.getElementById('btnText').textContent = 'Görsel Oluştur';
+  }
+}
 
 // Bilinen job state'leri — sadece UI update kontrolü için
 const knownJobStates = {};
@@ -1556,20 +1582,24 @@ function createJobCard(jobId, prompt) {
   return div;
 }
 
-function renderSteps(jobId, activeStep) {
+function renderSteps(jobId, activeStep, isImage) {
   const el = document.getElementById('job-' + jobId);
   if (!el) return;
-  const idx = STEPS.indexOf(activeStep);
-  const items = STEPS.map((s, i) => {
+  const stepList = isImage
+    ? ['Signed URL alınıyor...','Resim yükleniyor (base64)...','Resim yükleniyor (raw)...','Materyal oluşturuluyor...','Görev kuyruğa alınıyor...','Görsel bekleniyor...']
+    : STEPS;
+  const idx = stepList.indexOf(activeStep);
+  const items = stepList.map((s, i) => {
     const cls = i < idx ? 'done' : i === idx ? 'active' : '';
     return `<div class="step-item ${cls}"><div class="step-dot"></div>${s}</div>`;
   }).join('');
+  const titleLabel = isImage ? 'Görsel oluşturuluyor' : 'Video oluşturuluyor';
   el.innerHTML = `
     <div class="status-card">
       <div class="status-header">
         <div class="spinner"></div>
         <div>
-          <div class="status-title">Video oluşturuluyor <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span></div>
+          <div class="status-title">${titleLabel} <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span></div>
           <div class="status-step">${activeStep}</div>
         </div>
       </div>
@@ -1577,22 +1607,28 @@ function renderSteps(jobId, activeStep) {
     </div>`;
 }
 
-function renderSuccess(jobId, videoUrl, prompt, modelId, duration) {
+function renderSuccess(jobId, videoUrl, prompt, modelId, duration, jobType) {
   const el = document.getElementById('job-' + jobId);
   if (!el) return;
+  const isImage = jobType === 'image';
   const isFav = favoritesData.some(f => f.videoUrl === videoUrl);
   const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const model = getModel(modelId || '17');
   const dur   = duration || '?';
+  const mediaEl = isImage
+    ? `<img src="${videoUrl}" style="width:100%;border-radius:8px;margin-top:10px;display:block" alt="${escapedPrompt}">`
+    : `<video class="video-player" controls autoplay loop muted><source src="${videoUrl}" type="video/mp4"></video>`;
+  const readyLabel = isImage ? 'Görsel hazır!' : 'Video hazır!';
+  const badgeExtra = isImage ? `<span class="model-badge blue" style="font-size:9px">🖼️ Görsel</span>` : `<span class="model-badge green" style="font-size:9px">${model.name} · ${dur}sn</span>`;
   el.innerHTML = `
     <div class="success-card">
       <div class="success-header">
         <div class="success-icon">✓</div>
         <div style="flex:1;min-width:0">
           <div class="success-title" style="display:flex;align-items:center;gap:8px">
-            Video hazır!
+            ${readyLabel}
             <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted)">#${jobId}</span>
-            <span class="model-badge green" style="font-size:9px">${model.name} · ${dur}sn</span>
+            ${badgeExtra}
           </div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
             <div class="success-sub" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapedPrompt}">${prompt}</div>
@@ -1600,9 +1636,7 @@ function renderSuccess(jobId, videoUrl, prompt, modelId, duration) {
           </div>
         </div>
       </div>
-      <video class="video-player" controls autoplay loop muted>
-        <source src="${videoUrl}" type="video/mp4">
-      </video>
+      ${mediaEl}
       <div class="video-actions">
         <a class="btn-sm btn-green" href="${videoUrl}" download>⬇ İndir</a>
         <button class="btn-sm btn-outline" onclick="copyUrl('${videoUrl}')">🔗 URL Kopyala</button>
@@ -1647,22 +1681,28 @@ async function generate() {
 
   document.getElementById('submitBtn').disabled = true;
 
+  const isImage = currentMode === 'image';
   const model      = getModel(selectedModelId);
   const audio_type = (model.voice && voiceEnabled) ? model.audio_type_on : 0;
 
   try {
-    const res = await fetch('/api/generate', {
+    const endpoint = isImage ? '/api/generate-image' : '/api/generate';
+    const body = isImage
+      ? { imageBase64: imageBase64, imageName: imageFile.name, prompt }
+      : {
+          imageBase64: imageBase64,
+          imageName:   imageFile.name,
+          prompt,
+          model_id:    selectedModelId,
+          duration:    selectedDuration,
+          voice:       model.voice && voiceEnabled,
+          audio_type,
+        };
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        imageBase64: imageBase64,
-        imageName:   imageFile.name,
-        prompt:      prompt,
-        model_id:    selectedModelId,
-        duration:    selectedDuration,
-        voice:       model.voice && voiceEnabled,
-        audio_type:  audio_type,
-      })
+      body: JSON.stringify(body)
     });
 
     if (!res.ok) {
@@ -1673,13 +1713,11 @@ async function generate() {
 
     const { jobId } = await res.json();
 
-    // Backend token tüketti, frontend'deki listeyi de senkronize et
     removeFirstToken();
     checkReady();
 
-    // Kart oluştur (polling halledecek adım güncellemelerini)
     createJobCard(jobId, prompt);
-    renderSteps(jobId, STEPS[0]);
+    renderSteps(jobId, STEPS[0], isImage);
     switchTab('output');
 
   } catch (err) {
@@ -1712,9 +1750,9 @@ async function pollJobs() {
 
       if (job.status === 'running') {
         // Her poll'da adımı güncelle
-        renderSteps(jobId, job.step);
+        renderSteps(jobId, job.step, job.job_type === 'image');
       } else if (job.status === 'success' && prev !== 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
+        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration, job.job_type);
       } else if (job.status === 'error' && prev !== 'error') {
         renderError(jobId, job.error);
       }
@@ -1804,12 +1842,13 @@ function renderFavorites() {
   list.innerHTML = pageItems.map((item, relIdx) => {
     const idx = start + relIdx;
     const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const thumbEl = item.job_type === 'image'
+      ? `<img class="history-thumb" src="${item.videoUrl}" style="object-fit:cover;width:100%;height:100%" alt="${esc}">`
+      : `<video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()"><source src="${item.videoUrl}" type="video/mp4"></video>`;
     return `
     <div class="history-card">
       <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
-        <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
-          <source src="${item.videoUrl}" type="video/mp4">
-        </video>
+        ${thumbEl}
       </div>
       <div class="history-card-info">
         <div style="display:flex;align-items:center;gap:6px">
@@ -1928,12 +1967,13 @@ function renderHistory() {
     const idx = start + relIdx;
     const isFav = favoritesData.some(f => f.videoUrl === item.videoUrl);
     const esc = (item.prompt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const thumbEl = item.job_type === 'image'
+      ? `<img class="history-thumb" src="${item.videoUrl}" style="object-fit:cover;width:100%;height:100%" alt="${esc}">`
+      : `<video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()"><source src="${item.videoUrl}" type="video/mp4"></video>`;
     return `
     <div class="history-card">
       <div class="history-thumb-wrap" onclick="window.open('${item.videoUrl}','_blank')">
-        <video class="history-thumb" muted loop onmouseenter="this.play()" onmouseleave="this.pause()">
-          <source src="${item.videoUrl}" type="video/mp4">
-        </video>
+        ${thumbEl}
       </div>
       <div class="history-card-info">
         <div style="display:flex;align-items:center;gap:6px">
