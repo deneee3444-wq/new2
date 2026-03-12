@@ -1616,7 +1616,7 @@ function renderSuccess(jobId, videoUrl, prompt, modelId, duration, jobType) {
   const model = getModel(modelId || '17');
   const dur   = duration || '?';
   const mediaEl = isImage
-    ? `<img src="${videoUrl}" style="width:100%;border-radius:8px;margin-top:10px;display:block" alt="${escapedPrompt}">`
+    ? `<img class="video-player" src="${videoUrl}" style="object-fit:contain" alt="${escapedPrompt}">`
     : `<video class="video-player" controls autoplay loop muted><source src="${videoUrl}" type="video/mp4"></video>`;
   const readyLabel = isImage ? 'Görsel hazır!' : 'Video hazır!';
   const badgeExtra = isImage ? `<span class="model-badge blue" style="font-size:9px">🖼️ Görsel</span>` : `<span class="model-badge green" style="font-size:9px">${model.name} · ${dur}sn</span>`;
@@ -1640,7 +1640,7 @@ function renderSuccess(jobId, videoUrl, prompt, modelId, duration, jobType) {
       <div class="video-actions">
         <a class="btn-sm btn-green" href="${videoUrl}" download>⬇ İndir</a>
         <button class="btn-sm btn-outline" onclick="copyUrl('${videoUrl}')">🔗 URL Kopyala</button>
-        <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" id="fav-out-${jobId}" onclick="toggleFavFromOutput('${videoUrl}','${escapedPrompt}','fav-out-${jobId}')">♥ ${isFav ? 'Favoride' : 'Favori'}</button>
+        <button class="btn-sm btn-fav ${isFav ? 'active' : ''}" id="fav-out-${jobId}" onclick="toggleFavFromOutput('${videoUrl}','${escapedPrompt}','fav-out-${jobId}','${jobType||''}')">♥ ${isFav ? 'Favoride' : 'Favori'}</button>
         <button class="btn-sm btn-danger" onclick="removeCard('job-${jobId}')">🗑 Kaldır</button>
       </div>
     </div>`;
@@ -1894,14 +1894,14 @@ function toggleFavFromHistory(histIdx, btnId) {
   }
 }
 
-function toggleFavFromOutput(videoUrl, prompt, btnId) {
+function toggleFavFromOutput(videoUrl, prompt, btnId, jobType) {
   const favIdx = favoritesData.findIndex(f => f.videoUrl === videoUrl);
   const btn = document.getElementById(btnId);
   if (favIdx >= 0) {
     removeFavoriteByIdx(favIdx);
     if (btn) { btn.classList.remove('active'); btn.textContent = '♥ Favori'; }
   } else {
-    const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR') };
+    const item = { videoUrl, prompt, time: new Date().toLocaleString('tr-TR'), job_type: jobType || 'video' };
     addFavorite(item);
     if (btn) { btn.classList.add('active'); btn.textContent = '♥ Favoride'; }
   }
@@ -2036,13 +2036,13 @@ async function initState() {
       const job = jobs[jobId];
       createJobCard(jobId, job.prompt);
       if (job.status === 'success') {
-        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration);
+        renderSuccess(jobId, job.videoUrl, job.prompt, job.model_id, job.duration, job.job_type);
         knownJobStates[jobId] = 'success';
       } else if (job.status === 'error') {
         renderError(jobId, job.error);
         knownJobStates[jobId] = 'error';
       } else {
-        renderSteps(jobId, job.step || STEPS[0]);
+        renderSteps(jobId, job.step || STEPS[0], job.job_type === 'image');
         knownJobStates[jobId] = 'running';
       }
     }
