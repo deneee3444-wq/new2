@@ -731,10 +731,6 @@ def run_image_generation(job_id, token, image_data_url, image_name, prompt):
                                 break
                         if found:
                             break
-                    if not found and groups:
-                        found = (groups[0].get('tasks') or [None])[0]
-                else:
-                    found = (groups[0].get('tasks') or [None])[0]
 
                 if found and found.get('status') == 2:
                     url = found['after_material']['urls']['url']
