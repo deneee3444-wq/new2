@@ -543,6 +543,231 @@ def run_generation(job_id, token, image_data_url, image_name, prompt,
         save_to_disk()
 
 
+# ── IMAGE-TO-IMAGE ÜRETIM DÖNGÜSÜ ────────────────────────────────────────────
+IMG_STEPS = [
+    'Signed URL alınıyor...',
+    'Resim yükleniyor (base64)...',
+    'Resim yükleniyor (raw)...',
+    'Materyal oluşturuluyor...',
+    'Görev kuyruğa alınıyor...',
+    'Görsel bekleniyor...'
+]
+
+@app.route('/api/generate-image', methods=['POST'])
+@login_required
+def generate_image():
+    data       = request.get_json(force=True)
+    image_data = data.get('imageBase64', '')
+    image_name = data.get('imageName', 'image.jpg')
+    prompt     = data.get('prompt', '').strip()
+
+    if not image_data or not prompt:
+        return jsonify({'error': 'Eksik parametre'}), 400
+
+    with state_lock:
+        if not state['tokens']:
+            return jsonify({'error': 'Hesap listesi boş. accounts.txt yükleyin.'}), 400
+        token_line = state['tokens'][0]
+        parts      = token_line.split(':')
+        token      = parts[2].strip() if len(parts) > 2 else token_line.strip()
+        state['tokens'].pop(0)
+
+    save_to_disk()
+
+    job_id = str(int(time.time() * 1000))
+    with state_lock:
+        state['jobs'][job_id] = {
+            'id':        job_id,
+            'prompt':    prompt,
+            'job_type':  'image',
+            'status':    'running',
+            'step':      'Başlatılıyor...',
+            'stepIndex': -1,
+            'videoUrl':  None,
+            'error':     None,
+            'createdAt': datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
+        }
+
+    t = threading.Thread(
+        target=run_image_generation,
+        args=(job_id, token, image_data, image_name, prompt),
+        daemon=True
+    )
+    t.start()
+    return jsonify({'jobId': job_id})
+
+
+def run_image_generation(job_id, token, image_data_url, image_name, prompt):
+    try:
+        if ',' in image_data_url:
+            b64_data = image_data_url.split(',')[1]
+        else:
+            b64_data = image_data_url
+
+        file_ext = image_name.split('.')[-1].lower()
+        if file_ext not in ('jpg', 'jpeg', 'png', 'webp', 'gif'):
+            file_ext = 'jpeg'
+
+        # ── ADIM 0: Signed URL ──────────────────────────────────────────────
+        update_job(job_id, step=IMG_STEPS[0], stepIndex=0)
+        sign_res  = requests.get(
+            f'{BASE}/api/v1/common/upload/signed-url',
+            params={'filename': image_name},
+            headers=clipfly_headers(token),
+            timeout=30
+        )
+        sign_json = sign_res.json()
+        if sign_json.get('code') and sign_json['code'] != 200:
+            raise Exception(f"Token geçersiz veya süresi dolmuş ({sign_json.get('message')})")
+        signing = sign_json.get('data', '')
+        if not isinstance(signing, str) or '.com' not in signing:
+            raise Exception('Signed URL alınamadı: ' + json.dumps(signing))
+
+        # ── ADIM 1: Base64 upload ────────────────────────────────────────────
+        update_job(job_id, step=IMG_STEPS[1], stepIndex=1)
+        b64_res     = requests.post(
+            f'{BASE}/api/v1/common/upload/base64',
+            headers=clipfly_headers(token),
+            json={
+                'content':          image_data_url,
+                'file_type':        'image',
+                'is_original_name': 0,
+                'name':             image_name,
+                'prefix_path':      '/uploads'
+            },
+            timeout=60
+        )
+        source_path = b64_res.json()['data']['url']
+
+        # ── ADIM 2: Raw (binary) S3 upload ──────────────────────────────────
+        update_job(job_id, step=IMG_STEPS[2], stepIndex=2)
+        image_bytes = base64.b64decode(b64_data)
+        requests.put(
+            signing,
+            data=image_bytes,
+            headers={
+                'content-type':   f'image/{file_ext}',
+                'origin':         BASE,
+                'referer':        BASE + '/aitools/ai-video-generator-v2',
+                'user-agent':     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+            },
+            timeout=120
+        )
+
+        # ── ADIM 3: Materyal oluştur ─────────────────────────────────────────
+        update_job(job_id, step=IMG_STEPS[3], stepIndex=3)
+        source_image = signing.split('?')[0].split('.com')[1]
+        mat_res      = requests.post(
+            f'{BASE}/api/v1/user/materials/create',
+            headers=clipfly_headers(token, {'x-country': 'TR'}),
+            json={
+                'is_ai': -1,
+                'name':  image_name,
+                'type':  'image',
+                'attrs': {},
+                'urls': {
+                    'thumb': source_path.replace(
+                        'https://video-clipfly-west2.s3.us-west-2.amazonaws.com', ''
+                    ),
+                    'url': source_image
+                }
+            },
+            timeout=30
+        )
+        material_id = mat_res.json()['data']['id']
+
+        # ── ADIM 4: Image-to-image görevi kuyruğa al ────────────────────────
+        update_job(job_id, step=IMG_STEPS[4], stepIndex=4)
+        task_res  = requests.post(
+            f'{BASE}/api/v1/user/ai-tasks/image-generator/create',
+            headers=clipfly_headers(token),
+            json={
+                'type':             22,
+                'prompt':           prompt,
+                'negative_prompt':  '',
+                'gnum':             1,
+                'style_id':         '',
+                'size_id':          'Auto',
+                'source_image':     source_image,
+                'materialId':       str(material_id),
+                'model_id':         'qwen',
+                'is_scale':         '0',
+                'width':            0,
+                'height':           0,
+            },
+            timeout=30
+        )
+        task_json = task_res.json()
+        task_id   = None
+        try:
+            task_id = str(task_json['data'][0]['id'])
+        except (KeyError, IndexError, TypeError):
+            pass
+        print(f'[{job_id}] Image görevi kuyruğa alındı. task_id={task_id}')
+
+        # ── ADIM 5: Görsel URL bekle ─────────────────────────────────────────
+        update_job(job_id, step=IMG_STEPS[5], stepIndex=5)
+        poll_url = (
+            f'{BASE}/api/v1/user/ai-tasks/ai-generator/queue-list'
+            '?page=1&page_size=10&paranoid=1&kiwi_locale=en-US'
+        )
+
+        image_url = None
+        for i in range(150):   # max ~5 dakika
+            time.sleep(2)
+            poll_res  = requests.get(poll_url, headers=clipfly_headers(token), timeout=30)
+            poll_data = poll_res.json()
+            try:
+                groups = poll_data.get('data', [])
+                found  = None
+                if task_id:
+                    for group in groups:
+                        for task in (group.get('tasks') or []):
+                            if str(task.get('id')) == task_id:
+                                found = task
+                                break
+                        if found:
+                            break
+                    if not found and groups:
+                        found = (groups[0].get('tasks') or [None])[0]
+                else:
+                    found = (groups[0].get('tasks') or [None])[0]
+
+                if found and found.get('status') == 2:
+                    url = found['after_material']['urls']['url']
+                    if url:
+                        image_url = BASE + url
+                        break
+            except (KeyError, IndexError, TypeError):
+                pass
+
+        if not image_url:
+            raise Exception('Görsel URL alınamadı — zaman aşımı (5 dk)')
+
+        print(f'[{job_id}] ✓ Görsel hazır: {image_url}')
+        update_job(job_id, status='success', videoUrl=image_url, step='Tamamlandı', stepIndex=6)
+
+        history_item = {
+            'videoUrl': image_url,
+            'prompt':   prompt,
+            'time':     datetime.now().strftime('%d.%m.%Y %H:%M'),
+            'job_type': 'image'
+        }
+        with state_lock:
+            state['history'].insert(0, history_item)
+            if len(state['history']) > 50:
+                state['history'] = state['history'][:50]
+        save_to_disk()
+
+    except Exception as e:
+        print(f'[{job_id}] ✗ Image Hata: {e}')
+        update_job(job_id, status='error', error=str(e), step='Hata')
+        save_to_disk()
+
+
 if __name__ == '__main__':
     print('ClipFly Auto başlatılıyor → http://localhost:5000')
     app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
